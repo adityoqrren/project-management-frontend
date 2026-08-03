@@ -1,0 +1,295 @@
+"use client";
+
+import {
+    createContext,
+    useContext,
+    useEffect,
+    useRef,
+    useState,
+} from "react";
+
+import { getWebSocketToken } from "@/lib/websocket";
+import { useAuth } from "@/context/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
+
+interface WebSocketContextValue {
+    connected: boolean;
+}
+
+const WebSocketContext =
+    createContext<WebSocketContextValue | null>(
+        null
+    );
+
+export function useWebSocket() {
+    const context =
+        useContext(WebSocketContext);
+
+    if (!context) {
+        throw new Error(
+            "useWebSocket must be used within WebSocketProvider"
+        );
+    }
+
+    return context;
+}
+
+interface WebSocketProviderProps {
+    children: React.ReactNode;
+}
+
+export function WebSocketProvider({
+    children,
+}: WebSocketProviderProps) {
+
+    const queryClient = useQueryClient();
+
+    const {
+        user,
+        loading,
+    } = useAuth();
+
+    const [connected, setConnected] =
+        useState(false);
+
+    const socketRef =
+        useRef<WebSocket | null>(null);
+
+    const reconnectTimeoutRef =
+        useRef<NodeJS.Timeout | null>(null);
+
+    const shouldReconnectRef =
+        useRef(true);
+
+    const handleNotificationCreated = () => {
+        queryClient.invalidateQueries({
+            queryKey: [
+                "notificationUnreadCount",
+            ],
+        });
+
+        queryClient.invalidateQueries({
+            queryKey: [
+                "notifications",
+            ],
+        });
+    }
+
+    type WebSocketEventHandler = (
+        data: unknown
+    ) => void;
+
+    const eventHandlers: Record<
+        string,
+        WebSocketEventHandler
+    > = {
+
+        "notification.created":
+            handleNotificationCreated,
+
+    };
+
+    const handleMessage = (
+        event: MessageEvent
+    ) => {
+        const message =
+            JSON.parse(event.data);
+
+        if (
+            typeof message.event !== "string"
+        ) {
+            return;
+        }
+
+        const handler =
+            eventHandlers[
+            message.event
+            ];
+
+        if (!handler) {
+
+            console.warn(
+                `Unknown websocket event: ${message.event}`
+            );
+
+            return;
+
+        }
+
+        handler(message.data);
+    };
+
+    const connectWebSocket =
+        async () => {
+
+            // Prevent duplicate connection
+            if (
+                socketRef.current &&
+                (
+                    socketRef.current.readyState === WebSocket.OPEN ||
+                    socketRef.current.readyState === WebSocket.CONNECTING
+                )
+            ) {
+                return;
+            }
+
+            try {
+
+                const token =
+                    await getWebSocketToken();
+
+                if (!shouldReconnectRef.current) {
+                    return;
+                }
+
+                console.log(
+                    new Date().toLocaleTimeString(),
+                    "Creating websocket..."
+                );
+
+                const ws =
+                    new WebSocket(
+                        `${process.env.NEXT_PUBLIC_WS_URL}?token=${token}`
+                    );
+
+                socketRef.current = ws;
+
+                ws.onopen = () => {
+
+                    console.log(
+                        "WebSocket connected"
+                    );
+
+                    setConnected(true);
+
+                };
+
+                ws.onerror = (event) => {
+
+                    console.error(
+                        "WebSocket error",
+                        event
+                    );
+
+                };
+
+                ws.onclose = () => {
+
+                    console.log(
+                        new Date().toLocaleTimeString(),
+                        "WebSocket disconnected"
+                    );
+
+                    setConnected(false);
+
+                    socketRef.current = null;
+
+                    if (
+                        !shouldReconnectRef.current
+                    ) {
+                        return;
+                    }
+
+                    reconnectTimeoutRef.current =
+                        setTimeout(() => {
+
+                            connectWebSocket();
+
+                        }, 3000);
+
+                };
+
+                // Will implement later
+                ws.onmessage = handleMessage
+
+            } catch (err) {
+
+                console.error(
+                    "Failed to connect websocket",
+                    err
+                );
+
+                if (
+                    shouldReconnectRef.current
+                ) {
+
+                    reconnectTimeoutRef.current =
+                        setTimeout(() => {
+
+                            connectWebSocket();
+
+                        }, 3000);
+
+                }
+
+            }
+
+        };
+
+    useEffect(() => {
+
+        console.log("WebSocket effect", {
+            loading,
+            user,
+        });
+
+        if (loading) {
+            return;
+        }
+
+        if (!user) {
+
+            shouldReconnectRef.current =
+                false;
+
+            socketRef.current?.close();
+
+            return;
+
+        }
+
+        shouldReconnectRef.current =
+            true;
+
+        connectWebSocket();
+
+        return () => {
+
+            shouldReconnectRef.current =
+                false;
+
+            console.log("Cleanup websocket");
+            socketRef.current?.close();
+
+            if (
+                reconnectTimeoutRef.current
+            ) {
+
+                clearTimeout(
+                    reconnectTimeoutRef.current
+                );
+
+            }
+
+        };
+
+    }, [
+        loading,
+        user,
+    ]);
+
+    return (
+
+        <WebSocketContext.Provider
+            value={{
+                connected,
+            }}
+        >
+
+            {children}
+
+        </WebSocketContext.Provider>
+
+    );
+
+}
