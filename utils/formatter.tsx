@@ -9,6 +9,7 @@ export const formatDate = (dateString: string) => {
   return `${day}/${month}/${year}`;
 };
 
+//to english format date eg : 02 Feb 2025
 export function formatDateLocal(dateString: string) {
   return new Date(dateString).toLocaleDateString(
     "en-GB",
@@ -18,4 +19,25 @@ export function formatDateLocal(dateString: string) {
       year: "numeric",
     }
   )
+}
+
+//to english format time eg : 18:00
+export function formatTimeLocal(isoString: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(isoString));
+}
+
+export function formatDateTimeLocal(
+  isoString: string
+): {
+  date: string;
+  time: string;
+} {
+  return {
+    date: formatDateLocal(isoString),
+    time: formatTimeLocal(isoString),
+  };
 }

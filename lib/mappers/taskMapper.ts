@@ -5,7 +5,7 @@ import { toLocalInput } from "@/utils/date";
 export function mapTaskFromApi(
   task: ApiTask
 ): Task {
-
+  
   const assignee: Member | null =
     task.assignee
       ? {
@@ -42,6 +42,8 @@ export function mapTaskFromApi(
       : "", // to local date string
 
     isActive: !task.completed,
-    deletedAt: task.deletedAt
+    createdAt: task.createdAt, // still in ISO string
+    updatedAt: task.updatedAt, // still in ISO string
+    deletedAt: task.deletedAt  // still in ISO string
   };
 }

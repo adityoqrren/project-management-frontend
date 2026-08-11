@@ -41,6 +41,8 @@ export type ApiTask = {
     joinedAt: string;
   } | null;
 
+  createdAt: string;
+  updatedAt: string;
   deletedAt: string | null;
 }
 
@@ -58,6 +60,8 @@ export type Task = {
   startDate: string;
   dueDate?: string;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
   deletedAt: string | null;
 };
 

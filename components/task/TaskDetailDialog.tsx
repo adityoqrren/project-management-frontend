@@ -12,6 +12,7 @@ import { assignTask, deleteTask, updateTask, updateTaskProgress } from "@/lib/ta
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { getProjectMembers } from "@/lib/project"
 import { invalidateDashboard, invalidateDashboardTasks } from "@/lib/dashboard"
+import { formatDateTimeLocal } from "@/utils/formatter"
 
 // type Mode = "owner" | "member"
 
@@ -50,6 +51,9 @@ export default function TaskDetailDialog({
     dueDate: task.dueDate ?? "",
     isActive: task.isActive,
   })
+
+  const { date: createdDate, time: createdTime } = formatDateTimeLocal(task.createdAt);
+  const { date: updatedDate, time: updatedTime } = formatDateTimeLocal(task.updatedAt);
   // const [title, setTitle] = useState(task.title)
   // const [description, setDescription] = useState(
   //   "Review and finalize the homepage layout wireframes for the new website redesign project. Align with brand guidelines and stakeholder feedback."
@@ -107,10 +111,12 @@ export default function TaskDetailDialog({
           dueDate: form.dueDate || undefined,
         });
 
-        await assignTask(
-          task.id,
-          form.assignee?.memberId ?? null
-        );
+        if (task.assignee?.memberId !== form.assignee?.memberId) {
+          await assignTask(
+            task.id,
+            form.assignee?.memberId ?? null
+          );
+        }
 
         return res;
       }
@@ -437,8 +443,8 @@ export default function TaskDetailDialog({
 
         {/* FOOTER */}
         <div className="text-xs text-gray-400 mt-6 border-t pt-3">
-          Created by Aditiyo Aji Pambudi on 04 Feb 2026, 18:30 <br />
-          Last updated 06 Feb 2026, 10:12
+          Created on {createdDate} , {createdTime} <br />
+          Last updated {updatedDate} , {updatedTime}
         </div>
 
       </div>
