@@ -89,10 +89,6 @@ export default function TasksPage() {
     Number(searchParams.get("limit")) || 5
   );
 
-  // getting task id from parameter
-  const taskId =
-    searchParams.get("taskId");
-
   const hasActiveFilters = Boolean(
     search ||
     assignee ||
@@ -260,16 +256,6 @@ export default function TasksPage() {
     );
   }, [membersData]);
 
-  const {
-    data: taskDetail,
-    isLoading: taskDetailLoading,
-    isError: taskDetailError,
-  } = useQuery({
-    queryKey: ["task", taskId],
-    queryFn: () => getTaskById(taskId!),
-    enabled: !!taskId,
-  });
-
   const tasks = tasksData?.data ?? [];
   const pagination =
     tasksData?.pagination
@@ -284,64 +270,24 @@ export default function TasksPage() {
     (member) => member.userId === user?.id
   );
 
-  const selectedTask =
-    taskDetail?.data;
-
 
   // console.log(`userId : ${user?.id} || memberUserId : ${currentMember?.userId}`)
 
   const canManageTask =
     currentMember?.role === "LEADER";
 
-  const canUpdateProgress =
-    currentMember?.role === "MEMBER" &&
-    selectedTask?.assignee?.memberId === currentMember.memberId;
 
   const loading = tasksLoading || membersLoading;
 
   const error = tasksError || membersError;
 
-  const taskErrorMessage =
-    taskId && taskDetailError
-      ? isApiError(taskDetailError)
-        ? taskDetailError.message
-        : "Failed to load task."
-      : null;
-
-  console.log(`taskerrormessage: ${taskErrorMessage}`)
-
   const handleOpenTask = (task: Task) => {
-    const params =
-      new URLSearchParams(searchParams);
+    const query = searchParams.toString();
 
-    params.set(
-      "taskId",
-      task.id
-    );
-
-    router.replace(
-      `${pathname}?${params.toString()}`,
-      {
-        scroll: false,
-      }
-    );
-    // console.log(`selected task active?: ${task.isActive}`)
-    // console.log(selectedTask?.title)
-  }
-
-  const handleCloseDetailDialog = () => {
-    const params =
-      new URLSearchParams(searchParams);
-
-    params.delete("taskId");
-
-    router.replace(
-      params.toString()
-        ? `${pathname}?${params.toString()}`
-        : pathname,
-      {
-        scroll: false,
-      }
+    router.push(
+      query
+        ? `/projects/${projectId}/tasks/${task.id}?${query}`
+        : `/projects/${projectId}/tasks/${task.id}`
     );
   }
 
@@ -681,31 +627,12 @@ export default function TasksPage() {
       </div>
       {/* )} */}
 
-      {selectedTask && (
-        <TaskDetailDialog
-          key={selectedTask.id}
-          open={!!selectedTask}
-          onClose={handleCloseDetailDialog}
-          // mode="owner" // nanti bisa dynamic
-          task={selectedTask}
-          canManageTask={canManageTask}
-          canUpdateProgress={canUpdateProgress}
-        />
-      )}
-
       <AddTaskDialog
         isOpen={openAddTaskDialog}
         onClose={() => setOpenAddTaskDialog(false)}
         projectId={projectId}
         projectName={project.name}
       />
-
-      {taskErrorMessage && (
-        <ErrorDialog
-          message={taskErrorMessage}
-          onClose={handleCloseDetailDialog}
-        />
-      )}
 
     </div>
   )

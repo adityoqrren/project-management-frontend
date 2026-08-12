@@ -59,7 +59,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="h-14 border-b bg-white flex items-center justify-between px-6">
+      <nav className="flex h-14 items-center justify-between border-b bg-white px-6">
         {/* Logo */}
         <div className="font-semibold text-lg">TaskFlow</div>
 

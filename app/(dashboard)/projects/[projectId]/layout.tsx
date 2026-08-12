@@ -69,10 +69,10 @@ export default function ProjectLayout({
         canManageProject,
       }}
     >
-      <div className="flex h-[calc(100vh-56px)]">
+      <div className="flex h-full min-h-0">
 
         {/* Desktop Sidebar */}
-        <div className="hidden md:block">
+        <div className="hidden shrink-0 md:block">
           <ProjectSidebar />
         </div>
 
@@ -109,7 +109,7 @@ export default function ProjectLayout({
         )}
 
         {/* Main Content */}
-        <div className="flex-1 min-w-0 flex flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
 
           {/* Mobile Header */}
           <div
@@ -121,6 +121,7 @@ export default function ProjectLayout({
             flex
             items-center
             gap-3
+            shrink-0
           "
           >
 
@@ -138,7 +139,10 @@ export default function ProjectLayout({
 
           </div>
 
-          <div className="flex flex-1 flex-col min-h-0 p-6">
+            {/** flex-1 : take remaining height |
+             *   min-h-0 : can shrink just to match remaining height if content's height more than remaining height to make overflow works
+             * ---> boundaries */}
+          <div className="min-h-0 flex-1 overflow-y-auto p-6">
             {children}
           </div>
 

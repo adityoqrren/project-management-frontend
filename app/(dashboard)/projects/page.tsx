@@ -164,22 +164,23 @@ export default function ProjectsPage() {
 
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="h-full overflow-y-auto">
+      <div className="max-w-6xl mx-auto p-6 space-y-6">
 
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-semibold">
-            My projects
-          </h1>
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-semibold">
+              My projects
+            </h1>
 
-          <p className="text-sm text-gray-500">
-            {projects.length} active projects belong to you
-          </p>
+            <p className="text-sm text-gray-500">
+              {projects.length} active projects belong to you
+            </p>
 
-          <Link
-            href="/projects/deleted"
-            className="
+            <Link
+              href="/projects/deleted"
+              className="
       mt-2
       inline-flex
       items-center
@@ -189,41 +190,41 @@ export default function ProjectsPage() {
       hover:text-red-700
       hover:underline
     "
+            >
+              View deleted projects
+              <ArrowRight className="size-4" />
+            </Link>
+          </div>
+
+          <button
+            className="bg-green-500 text-white px-4 py-2 rounded"
+            onClick={() => setOpen(true)}
           >
-            View deleted projects
-            <ArrowRight className="size-4" />
-          </Link>
+            + Create project
+          </button>
         </div>
 
-        <button
-          className="bg-green-500 text-white px-4 py-2 rounded"
-          onClick={() => setOpen(true)}
-        >
-          + Create project
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div
-        className="
+        {/* Filters */}
+        <div
+          className="
     flex flex-col
     lg:flex-row
     gap-3
   "
-      >
+        >
 
-        {/* Search */}
-        <div className="relative flex-1">
+          {/* Search */}
+          <div className="relative flex-1">
 
-          <input
-            value={searchInput}
-            onChange={(e) =>
-              setSearchInput(
-                e.target.value
-              )
-            }
-            placeholder="Search projects..."
-            className="
+            <input
+              value={searchInput}
+              onChange={(e) =>
+                setSearchInput(
+                  e.target.value
+                )
+              }
+              placeholder="Search projects..."
+              className="
         w-full
         border
         rounded-md
@@ -231,15 +232,15 @@ export default function ProjectsPage() {
         py-2
         pr-10
       "
-          />
+            />
 
-          {searchInput && (
-            <button
-              onClick={() => {
-                setSearchInput("");
-                setSearch("");
-              }}
-              className="
+            {searchInput && (
+              <button
+                onClick={() => {
+                  setSearchInput("");
+                  setSearch("");
+                }}
+                className="
           absolute
           right-3
           top-1/2
@@ -247,109 +248,109 @@ export default function ProjectsPage() {
           text-gray-400
           hover:text-gray-600
         "
-            >
-              ✕
-            </button>
-          )}
+              >
+                ✕
+              </button>
+            )}
 
-        </div>
+          </div>
 
-        {/* Role */}
-        <select
-          value={role}
-          onChange={(e) =>
-            setRole(
-              e.target.value
-            )
-          }
-          className="
+          {/* Role */}
+          <select
+            value={role}
+            onChange={(e) =>
+              setRole(
+                e.target.value
+              )
+            }
+            className="
       border
       rounded-md
       px-3
       py-2
       min-w-[180px]
     "
-        >
-          <option value="">
-            All Roles
-          </option>
+          >
+            <option value="">
+              All Roles
+            </option>
 
-          <option value="LEADER">
-            Leader
-          </option>
+            <option value="LEADER">
+              Leader
+            </option>
 
-          <option value="MEMBER">
-            Member
-          </option>
-        </select>
+            <option value="MEMBER">
+              Member
+            </option>
+          </select>
 
-        {/* Sort By */}
-        <select
-          value={sortBy}
-          onChange={(e) =>
-            setSortBy(
-              e.target.value
-            )
-          }
-          className="
+          {/* Sort By */}
+          <select
+            value={sortBy}
+            onChange={(e) =>
+              setSortBy(
+                e.target.value
+              )
+            }
+            className="
       border
       rounded-md
       px-3
       py-2
       min-w-[180px]
     "
-        >
-          <option value="">
-            Sort By
-          </option>
+          >
+            <option value="">
+              Sort By
+            </option>
 
-          <option value="name">
-            Name
-          </option>
+            <option value="name">
+              Name
+            </option>
 
-          <option value="createdAt">
-            Created Date
-          </option>
+            <option value="createdAt">
+              Created Date
+            </option>
 
-          <option value="lastActivityAt">
-            Updated Date
-          </option>
-        </select>
+            <option value="lastActivityAt">
+              Updated Date
+            </option>
+          </select>
 
-        {/* Order */}
-        <select
-          value={order}
-          onChange={(e) =>
-            setOrder(
-              e.target.value as
-              "asc" | "desc"
-            )
-          }
-          className="
+          {/* Order */}
+          <select
+            value={order}
+            onChange={(e) =>
+              setOrder(
+                e.target.value as
+                "asc" | "desc"
+              )
+            }
+            className="
       border
       rounded-md
       px-3
       py-2
       min-w-[160px]
     "
-        >
-          <option value="asc">
-            Ascending
-          </option>
+          >
+            <option value="asc">
+              Ascending
+            </option>
 
-          <option value="desc">
-            Descending
-          </option>
-        </select>
+            <option value="desc">
+              Descending
+            </option>
+          </select>
 
-        {hasActiveFilters && (
-          <button
-            onClick={() => {
-              setSearchInput("");
-              setSearch("");
-              setRole("");
-            }}
-            className="
+          {hasActiveFilters && (
+            <button
+              onClick={() => {
+                setSearchInput("");
+                setSearch("");
+                setRole("");
+              }}
+              className="
         px-3 py-2
         border rounded-md
         text-sm
@@ -357,52 +358,53 @@ export default function ProjectsPage() {
         hover:bg-red-50
         hover:text-red-600
       "
-          >
-            Clear Filters
-          </button>
+            >
+              Clear Filters
+            </button>
+          )}
+
+        </div>
+
+        {/* Table */}
+        {isLoading ? (
+
+          <div className="text-center py-10 text-gray-400">
+            Loading projects...
+          </div>
+
+        ) : error ? (
+
+          <div className="text-center py-10 text-red-500">
+            Failed to load projects
+          </div>
+
+        ) : projects.length === 0 ? (
+
+          <div className="text-center py-10 text-gray-400">
+            {hasActiveFilters
+              ? "No projects match your filters"
+              : "No projects yet. Create your first project"}
+          </div>
+
+        ) : (
+
+          <ProjectTable
+            projects={projects}
+          />
+
+        )}
+
+        {/* Dialog */}
+        {open && (
+          <ProjectFormDialog
+            onClose={() => setOpen(false)}
+            onSubmit={handleCreate} // 🔥 pakai API
+            title={"Create New Project"}
+            submitLabel={"Create"}
+            loadingLabel={"Creating Project"} />
         )}
 
       </div>
-
-      {/* Table */}
-      {isLoading ? (
-
-        <div className="text-center py-10 text-gray-400">
-          Loading projects...
-        </div>
-
-      ) : error ? (
-
-        <div className="text-center py-10 text-red-500">
-          Failed to load projects
-        </div>
-
-      ) : projects.length === 0 ? (
-
-        <div className="text-center py-10 text-gray-400">
-          {hasActiveFilters
-            ? "No projects match your filters"
-            : "No projects yet. Create your first project"}
-        </div>
-
-      ) : (
-
-        <ProjectTable
-          projects={projects}
-        />
-
-      )}
-
-      {/* Dialog */}
-      {open && (
-        <ProjectFormDialog
-          onClose={() => setOpen(false)}
-          onSubmit={handleCreate} // 🔥 pakai API
-          title={"Create New Project"}
-          submitLabel={"Create"} 
-          loadingLabel={"Creating Project"}        />
-      )}
-
     </div>
   );
 }
