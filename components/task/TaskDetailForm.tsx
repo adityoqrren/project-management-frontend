@@ -27,6 +27,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { formatDateTimeLocal } from "@/utils/formatter";
 import AssigneeSelector from "@/components/ui/AssigneeSelector";
 import DateTimePicker from "@/components/ui/DateTimePicker";
+import CommentsSection from "./CommentsSection";
 
 
 interface TaskDetailFormProps {
@@ -318,6 +319,15 @@ export default function TaskDetailForm({
                 </div>
               </div>
 
+              {/* Comments */}
+              <div className="mt-8">
+                {/* Comments will be implemented here */}
+                <CommentsSection
+                  taskId={task.id}
+                  canManageTask={canManageTask}
+                />
+              </div>
+
             </div>
 
             {/* Right column */}
@@ -533,11 +543,6 @@ export default function TaskDetailForm({
 
             </div>
           </div>
-        </div>
-
-        {/* Comments */}
-        <div className="mt-8">
-          {/* Comments will be implemented here */}
         </div>
       </div>
 

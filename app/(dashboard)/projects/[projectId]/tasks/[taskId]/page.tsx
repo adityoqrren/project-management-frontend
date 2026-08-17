@@ -32,7 +32,7 @@ import {
 
 import { formatDateTimeLocal } from "@/utils/formatter";
 import { useAuth } from "@/context/AuthContext";
-import TaskDetailForm from "./TaskDetailForm";
+import TaskDetailForm from "../../../../../../components/task/TaskDetailForm";
 
 export default function TaskDetailPage() {
   const { user } = useAuth();
