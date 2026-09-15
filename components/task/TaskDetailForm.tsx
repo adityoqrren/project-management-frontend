@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 
-import { useToast } from "@/context/ToastContext";
+import { ToastType, useToast } from "@/context/ToastContext";
 
 import {
   assignTask,
@@ -28,6 +28,10 @@ import { formatDateTimeLocal } from "@/utils/formatter";
 import AssigneeSelector from "@/components/ui/AssigneeSelector";
 import DateTimePicker from "@/components/ui/DateTimePicker";
 import CommentsSection from "./CommentsSection";
+import TaskAttachments from "./attachments/TaskAttachments";
+import TaskActivityHistory from "./TaskActivityHistory";
+import TaskActivityTabs from "./TaskActivityTabs";
+import TaskProperties from "./TaskProperties";
 
 
 interface TaskDetailFormProps {
@@ -119,7 +123,7 @@ export default function TaskDetailForm({
 
       showToast(
         "Failed to update task",
-        "error"
+        ToastType.error
       );
     },
   });
@@ -155,12 +159,15 @@ export default function TaskDetailForm({
 
       showToast(
         "Failed to delete task",
-        "error"
+        ToastType.error
       );
     },
   });
 
   const canEdit =
+    canManageTask || canUpdateProgress;
+
+  const canManageAttachment =
     canManageTask || canUpdateProgress;
 
   const isSaving =
@@ -179,6 +186,41 @@ export default function TaskDetailForm({
 
   const handleSave = () => {
     updateMutation.mutate();
+  };
+
+  const handleStartDateChange = (value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      startDate: value,
+    }));
+  };
+
+  const handleDueDateChange = (value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      dueDate: value,
+    }));
+  };
+
+  const handleStatusChange = (value: TaskStatus) => {
+    setForm((prev) => ({
+      ...prev,
+      status: value,
+    }));
+  };
+
+  const handlePriorityChange = (value: Priority) => {
+    setForm((prev) => ({
+      ...prev,
+      priority: value,
+    }));
+  };
+
+  const handleActiveChange = (value: boolean) => {
+    setForm((prev) => ({
+      ...prev,
+      isActive: value,
+    }));
   };
 
   return (
@@ -319,8 +361,41 @@ export default function TaskDetailForm({
                 </div>
               </div>
 
-              {/* Comments */}
-              <div className="mt-8">
+              {/* Task Properties - mobile only */}
+              <div className="lg:hidden">
+                <TaskProperties
+                  startDate={form.startDate}
+                  dueDate={form.dueDate}
+                  status={form.status}
+                  priority={form.priority}
+                  isActive={form.isActive}
+                  canManageTask={canManageTask}
+                  onStartDateChange={handleStartDateChange}
+                  onDueDateChange={handleDueDateChange}
+                  onStatusChange={handleStatusChange}
+                  onPriorityChange={handlePriorityChange}
+                  onActiveChange={handleActiveChange}
+                />
+              </div>
+
+              {/* Attachments */}
+              <TaskAttachments
+                taskId={task.id}
+                canManageAttachment={
+                  canManageAttachment
+                }
+              />
+
+              {/** Task Activity Tabs : Comments and Activity (for mobile only) */}
+              <div className="lg:hidden">
+                <TaskActivityTabs
+                  taskId={task.id}
+                  canManageTask={canManageTask}
+                />
+              </div>
+
+              {/* Comments (for desktop only) */}
+              <div className="hidden lg:block mt-8">
                 {/* Comments will be implemented here */}
                 <CommentsSection
                   taskId={task.id}
@@ -334,7 +409,7 @@ export default function TaskDetailForm({
             <div className="space-y-5">
 
               {/* Dates */}
-              <div>
+              {/* <div>
                 <label className="text-sm text-gray-500">
                   Dates
                 </label>
@@ -367,10 +442,10 @@ export default function TaskDetailForm({
                   />
 
                 </div>
-              </div>
+              </div> */}
 
               {/* Status */}
-              <div>
+              {/* <div>
                 <label className="text-sm text-gray-500">
                   Status
                 </label>
@@ -407,10 +482,10 @@ export default function TaskDetailForm({
                     Done
                   </option>
                 </select>
-              </div>
+              </div> */}
 
               {/* Priority */}
-              <div>
+              {/* <div>
                 <label className="text-sm text-gray-500">
                   Priority
                 </label>
@@ -451,10 +526,10 @@ export default function TaskDetailForm({
                     {form.priority}
                   </div>
                 )}
-              </div>
+              </div> */}
 
               {/* Active state */}
-              {canManageTask && (
+              {/* {canManageTask && (
                 <div>
                   <label className="text-sm text-gray-500">
                     Active state
@@ -504,7 +579,24 @@ export default function TaskDetailForm({
                     </button>
                   </div>
                 </div>
-              )}
+              )} */}
+
+              {/* Task Properties - mobile only */}
+              <div className="hidden lg:block">
+                <TaskProperties
+                  startDate={form.startDate}
+                  dueDate={form.dueDate}
+                  status={form.status}
+                  priority={form.priority}
+                  isActive={form.isActive}
+                  canManageTask={canManageTask}
+                  onStartDateChange={handleStartDateChange}
+                  onDueDateChange={handleDueDateChange}
+                  onStatusChange={handleStatusChange}
+                  onPriorityChange={handlePriorityChange}
+                  onActiveChange={handleActiveChange}
+                />
+              </div>
 
               {/* Danger zone */}
               {canManageTask && (
@@ -540,6 +632,12 @@ export default function TaskDetailForm({
                   </button>
                 </div>
               )}
+
+              {/* Task Activity History (for desktop only) */}
+
+              <div className="hidden lg:block">
+                <TaskActivityHistory taskId={task.id} />
+              </div>
 
             </div>
           </div>

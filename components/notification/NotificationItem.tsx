@@ -73,6 +73,24 @@ export default function NotificationItem({
 
                 }
 
+                if (
+                    notification.entityType &&
+                    notification.entityId
+                ) {
+                    const queryEntityKey = [notification.entityType == "task" ? "task" : "project", notification.entityId];
+                    const queryDashboardKey = [notification.entityType == "task" ? "dashboardTasks" : "dashboardProjects",];
+
+                    await Promise.all([
+                        queryClient.invalidateQueries({
+                            queryKey: queryEntityKey
+                        }),
+                        queryClient.invalidateQueries({
+                            queryKey: queryDashboardKey
+                        }),
+                    ])
+
+                }
+
                 onNavigate?.()
                 router.push(href);
             } catch (error) {

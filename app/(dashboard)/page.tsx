@@ -20,6 +20,7 @@ import DashboardTasks from "@/components/dashboard/DashboardTasks";
 import { Task } from "@/types/task";
 import TaskDetailDialog from "@/components/task/TaskDetailDialog";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -28,6 +29,7 @@ export default function DashboardPage() {
   // const [projectId, setProjectId] = useState("");
   const [taskStatus, setTaskStatus] = useState("");
   const [dueFilter, setDueFilter] = useState("");
+  const [selectedCount, setSelectedCount] = useState(0);
 
   const [selectedTask, setSelectedTask] =
     useState<Task | null>(null);
@@ -108,14 +110,9 @@ export default function DashboardPage() {
   })
 
   const handleOpenTask = (task: Task) => {
-    setSelectedTask(task);
-    setOpenTaskDialog(true);
-  };
-
-  const handleCloseTask = () => {
-    setSelectedTask(null);
-    setOpenTaskDialog(false);
-  };
+    router.push(`/projects/${task.project.id}/tasks/${task.id}`
+    );
+  }
 
   const scrollToTasks = () => {
     tasksSectionRef.current?.scrollIntoView({
@@ -251,11 +248,28 @@ export default function DashboardPage() {
             loading={taskCountsLoading}
             taskStatus={taskStatus}
             dueFilter={dueFilter}
-            onChange={(status, due) => {
+            onChange={(status, due, count) => {
               setTaskStatus(status);
               setDueFilter(due);
+              setSelectedCount(count);
             }}
           />
+
+          <div className="flex items-center justify-end mb-4">
+
+            <Link
+              href="/tasks"
+              className="
+            text-sm
+            font-medium
+            text-green-600
+            hover:text-green-700
+          "
+            >
+             {selectedCount > 5 ? `${selectedCount-5} more |` : ``} View All →
+            </Link>
+
+          </div>
 
           <DashboardTasks
             tasks={tasks}
@@ -264,18 +278,6 @@ export default function DashboardPage() {
             onOpenTask={handleOpenTask}
           />
         </section>
-
-        {selectedTask && (
-          <TaskDetailDialog
-            key={selectedTask.id}
-            open={openTaskDialog}
-            onClose={handleCloseTask}
-            // mode="owner"
-            task={selectedTask}
-            canManageTask={canManageTask}
-            canUpdateProgress={canUpdateProgress}
-          />
-        )}
 
       </div>
     </div>

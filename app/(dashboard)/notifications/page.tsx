@@ -108,21 +108,22 @@ export default function NotificationPage() {
     }
 
     return (
-        <div className="max-w-6xl mx-auto p-6 space-y-6">
+        <div className="h-full overflow-y-auto">
+            <div className="max-w-6xl mx-auto p-6 space-y-6">
 
-            <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between">
 
-                <h1 className="text-2xl font-semibold">
-                    Notifications
-                </h1>
-                <button
-                    onClick={handleMarkAllAsRead}
-                    className="bg-black hover:bg-gray-400 active:scale-95 px-4 py-2 text-white rounded-md transition-all duration-150 transform"
-                >
-                    Mark all as read
-                </button>
+                    <h1 className="text-2xl font-semibold">
+                        Notifications
+                    </h1>
+                    <button
+                        onClick={handleMarkAllAsRead}
+                        className="bg-black hover:bg-gray-400 active:scale-95 px-4 py-2 text-white rounded-md transition-all duration-150 transform"
+                    >
+                        Mark all as read
+                    </button>
 
-                {/* <div
+                    {/* <div
                     onClick={handleMarkAllAsRead}
                     className="
                     inline-block
@@ -138,41 +139,41 @@ export default function NotificationPage() {
                     Mark all as read
                 </div> */}
 
-            </div>
+                </div>
 
-            <div
-                className="
+                <div
+                    className="
         rounded-lg
         border
         bg-white
     "
-            >
+                >
 
-                {notifications.map(
-                    notification => (
+                    {notifications.map(
+                        notification => (
 
-                        <NotificationItem
-                            key={notification.id}
-                            notification={notification}
-                        />
+                            <NotificationItem
+                                key={notification.id}
+                                notification={notification}
+                            />
 
-                    )
-                )}
+                        )
+                    )}
 
-            </div>
+                </div>
 
-            {hasNextPage && (
+                {hasNextPage && (
 
-                <div className="pt-4">
+                    <div className="pt-4">
 
-                    <button
-                        onClick={() =>
-                            fetchNextPage()
-                        }
-                        disabled={
-                            isFetchingNextPage
-                        }
-                        className="
+                        <button
+                            onClick={() =>
+                                fetchNextPage()
+                            }
+                            disabled={
+                                isFetchingNextPage
+                            }
+                            className="
                 w-full
                 rounded-lg
                 border
@@ -180,17 +181,18 @@ export default function NotificationPage() {
                 hover:bg-gray-50
                 disabled:opacity-50
             "
-                    >
+                        >
 
-                        {isFetchingNextPage
-                            ? "Loading..."
-                            : "Load more"}
+                            {isFetchingNextPage
+                                ? "Loading..."
+                                : "Load more"}
 
-                    </button>
+                        </button>
 
-                </div>
+                    </div>
 
-            )}
+                )}
+            </div>
         </div>
     );
 }

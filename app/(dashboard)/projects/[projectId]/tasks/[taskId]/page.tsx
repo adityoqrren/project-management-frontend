@@ -44,6 +44,7 @@ export default function TaskDetailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+
   const {
     data: taskData,
     isLoading: taskLoading,
@@ -195,7 +196,7 @@ export default function TaskDetailPage() {
       </button>
 
       <TaskDetailForm
-        key={task.id}
+        key={`${task.id}-${task.updatedAt}`} // always re-render when task updated
         task={task}
         members={members}
         canManageTask={canManageTask}

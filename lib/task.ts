@@ -46,6 +46,7 @@ interface GetProjectTasksApiResponse {
 async function getProjectTasksRaw(
   url: string
 ) {
+  // simulate loading
   await new Promise((resolve) =>
     setTimeout(resolve, 3000)
   );

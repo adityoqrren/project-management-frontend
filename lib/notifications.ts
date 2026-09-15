@@ -81,7 +81,7 @@ export function getNotificationHref(
 ) {
   switch (notification.entityType) {
     case "task":
-      return `/projects/${notification.projectId}/tasks?taskId=${notification.entityId}`;
+      return `/projects/${notification.projectId}/tasks/${notification.entityId}`;
 
     case "project":
       return `/projects/${notification.projectId}`;

@@ -36,11 +36,15 @@ export async function apiFetch<T>(
   options: ApiFetchOptions = {}
 ): Promise<T> {
   const doFetch = async (): Promise<Response> => {
+    const isFormData = options.body instanceof FormData;
+
     return fetch(`${BASE_URL}${endpoint}`, {
       ...options,
-      credentials: "include", // 🔥 send cookies
+      credentials: "include",
       headers: {
-        "Content-Type": "application/json",
+        ...(isFormData
+          ? {}
+          : { "Content-Type": "application/json" }),
         ...(options.headers || {}),
       },
     });
