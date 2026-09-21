@@ -115,6 +115,7 @@ export async function getMyTasks(
 export async function getTaskById(
   taskId: string
 ) {
+  console.log("Fetching task detail", taskId);
   const res = await apiFetch<{
     status: string;
     data: ApiTask;

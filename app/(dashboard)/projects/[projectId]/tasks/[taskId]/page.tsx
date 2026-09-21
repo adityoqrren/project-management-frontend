@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   useParams,
   useRouter,
@@ -33,6 +33,7 @@ import {
 import { formatDateTimeLocal } from "@/utils/formatter";
 import { useAuth } from "@/context/AuthContext";
 import TaskDetailForm from "../../../../../../components/task/TaskDetailForm";
+import { useWebSocket } from "@/providers/WebSocketProvider";
 
 export default function TaskDetailPage() {
   const { user } = useAuth();
@@ -44,16 +45,24 @@ export default function TaskDetailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const [taskUpdated, setTaskUpdated] =
+    useState(false);
+
+  const {
+    subscribeToNotifications,
+  } = useWebSocket();
 
   const {
     data: taskData,
     isLoading: taskLoading,
     isError: taskError,
     error,
+    refetch: refetchTask,
   } = useQuery({
     queryKey: ["task", taskId],
     queryFn: () => getTaskById(taskId),
     enabled: !!taskId,
+    refetchOnWindowFocus: false,
   });
 
   const task = taskData?.data;
@@ -67,6 +76,42 @@ export default function TaskDetailPage() {
     queryFn: () => getProjectMembers(projectId),
     enabled: !!projectId,
   });
+
+  useEffect(() => {
+    const unsubscribe =
+      subscribeToNotifications(
+        (notification) => {
+          console.log(`function subscribeToNotifications in TaskDetailPage triggered`)
+          if (
+            notification.type !==
+            "task.updated"
+          ) {
+            return;
+          }
+
+          if (
+            notification.entityType !==
+            "task"
+          ) {
+            return;
+          }
+
+          if (
+            notification.entityId !==
+            taskId
+          ) {
+            return;
+          }
+
+          setTaskUpdated(true);
+        }
+      );
+
+    return unsubscribe;
+  }, [
+    subscribeToNotifications,
+    taskId,
+  ]);
 
   const members: Member[] = useMemo(() => {
     return (
@@ -115,6 +160,12 @@ export default function TaskDetailPage() {
       </div>
     );
   }
+
+  const handleRefreshTask = async () => {
+    await refetchTask();
+
+    setTaskUpdated(false);
+  };
 
   if (taskError || membersError || !task) {
     const message =
@@ -194,6 +245,31 @@ export default function TaskDetailPage() {
         <ArrowLeft className="size-4" />
         Back to tasks list
       </button>
+
+      {taskUpdated && (
+        <div className="border-b bg-yellow-50 px-4 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm text-yellow-800">
+              This task has been updated.
+              Refresh to see the latest changes.
+            </p>
+
+            <button
+              type="button"
+              onClick={handleRefreshTask}
+              className="
+                    shrink-0
+                    text-sm
+                    font-medium
+                    text-yellow-900
+                    hover:underline
+                "
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
+      )}
 
       <TaskDetailForm
         key={`${task.id}-${task.updatedAt}`} // always re-render when task updated

@@ -21,8 +21,9 @@ import { createEmptyPagination } from "@/components/common/Pagination";
 import { isApiError } from "@/lib/errors";
 import ErrorDialog from "@/components/ui/ErrorDialog";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Filter, X } from "lucide-react";
 import RefreshIndicator from "@/components/ui/RefreshIndicator";
+import TaskFilters from "@/components/task/TaskFilters";
 
 export default function TasksPage() {
   const { user } = useAuth();
@@ -45,6 +46,7 @@ export default function TasksPage() {
 
   // const [openDetailTaskDialog, setOpenDetailTaskDialog] = useState(false)
   const [openAddTaskDialog, setOpenAddTaskDialog] = useState(false)
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const [assignee, setAssignee] =
     useState(
@@ -88,6 +90,12 @@ export default function TasksPage() {
   const [limit, setLimit] = useState(
     Number(searchParams.get("limit")) || 5
   );
+
+  const activeFilterCount = [
+    assignee,
+    taskStatus,
+    priority,
+  ].filter(Boolean).length;
 
   const hasActiveFilters = Boolean(
     search ||
@@ -291,6 +299,37 @@ export default function TasksPage() {
     );
   }
 
+  //Filter Handlers
+  const handleAssigneeChange = (value: string) => {
+    setAssignee(value);
+    setPage(1);
+  };
+
+  const handleTaskStatusChange = (value: string) => {
+    setTaskStatus(value);
+    setPage(1);
+  };
+
+  const handlePriorityChange = (value: string) => {
+    setPriority(value);
+    setPage(1);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value);
+    setPage(1);
+  };
+
+  const handleSortByChange = (value: string) => {
+    setSortBy(value);
+    setPage(1);
+  };
+
+  const handleOrderChange = (value: "asc" | "desc") => {
+    setOrder(value);
+    setPage(1);
+  };
+
   const handleClearFilters = () => {
     setAssignee("");
     setTaskStatus("");
@@ -334,262 +373,161 @@ export default function TasksPage() {
         }
       </div>
 
-      {/* Filter & Sorting */}
-      <div className="space-y-3">
+      {/* Desktop filters */}
+      <div className="hidden shrink-0 lg:block">
+        <TaskFilters
+          assignee={assignee}
+          taskStatus={taskStatus}
+          priority={priority}
+          searchInput={searchInput}
+          sortBy={sortBy}
+          order={order}
+          members={members}
+          hasActiveFilters={hasActiveFilters}
+          onAssigneeChange={handleAssigneeChange}
+          onTaskStatusChange={handleTaskStatusChange}
+          onPriorityChange={handlePriorityChange}
+          onSearchChange={handleSearchChange}
+          onSortByChange={handleSortByChange}
+          onOrderChange={handleOrderChange}
+          onClearFilters={handleClearFilters}
+        />
+      </div>
 
-        <div
-          className="
-          flex-1
-        flex flex-col
-        lg:justify-start
-        gap-3
-      "
-        >
-
-          {/*FILTERS */}
-          <div
+      {/* Mobile filter + table area */}
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <div className="shrink-0 lg:hidden">
+          <button
+            type="button"
+            onClick={() => setFilterOpen((open) => !open)}
             className="
-          flex flex-col
-          sm:flex-row
-          gap-3
-        "
-          >
-
-            {/* Assignee */}
-            <select
-              value={assignee}
-              onChange={(e) => {
-                setAssignee(e.target.value)
-                setPage(1);
-              }
-              }
-              className="
-            border rounded-md px-3 py-2
-            bg-white text-sm
-            min-w-[220px]
-          "
-            >
-              <option value="">
-                All Assignees
-              </option>
-
-              <option value="unassigned">
-                Unassigned
-              </option>
-
-              {members.map((member) => (
-                <option
-                  key={member.memberId}
-                  value={member.memberId}
-                >
-                  {member.name}
-                </option>
-              ))}
-            </select>
-
-            {/* Status */}
-            <select
-              value={taskStatus}
-              onChange={(e) => {
-                setTaskStatus(e.target.value)
-                setPage(1);
-              }
-              }
-              className="
-            border rounded-md px-3 py-2
-            bg-white text-sm
-            min-w-[180px]
-          "
-            >
-              <option value="">
-                All Statuses
-              </option>
-
-              <option value="TODO">
-                Todo
-              </option>
-
-              <option value="IN_PROGRESS">
-                In Progress
-              </option>
-
-              <option value="DONE">
-                Done
-              </option>
-            </select>
-
-            {/* Priority */}
-            <select
-              value={priority}
-              onChange={(e) => {
-                setPriority(e.target.value);
-                setPage(1);
-              }
-              }
-              className="
-            border rounded-md px-3 py-2
-            bg-white text-sm
-            min-w-[180px]
-          "
-            >
-              <option value="">
-                All Priorities
-              </option>
-
-              <option value="LOW">
-                Low
-              </option>
-
-              <option value="MEDIUM">
-                Medium
-              </option>
-
-              <option value="HIGH">
-                High
-              </option>
-            </select>
-
-            {hasActiveFilters && (
-              <button
-                onClick={handleClearFilters}
-                className="
-      px-3 py-2
-      rounded-md
-      border
-      text-sm
-      text-gray-600
-      hover:bg-red-50
-      hover:text-red-600
-      hover:border-red-200
-      transition
-    "
-              >
-                Clear Filters
-              </button>
-            )}
-
-          </div>
-
-          {/* SORTING */}
-          <div
-            className="
-          flex flex-col
-          lg:flex-row
-          gap-3
-        "
-          >
-
-            {/* SEARCH BAR */}
-            <div className="relative lg:min-w-[320px]">
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(e) => {
-                  setSearchInput(e.target.value);
-                  setPage(1);
-                }
-                }
-                placeholder="Search task title..."
-                className="
+              flex
               w-full
-              border rounded-md
-              px-3 py-2
-              pr-10
-              bg-white text-sm
-              "
-              />
+              items-center
+              justify-between
+              rounded-md
+              border
+              bg-white
+              px-3
+              py-2
+              text-sm
+              text-gray-700
+              hover:bg-gray-50
+            "
+          >
+            <span className="flex min-w-0 items-center gap-2">
+              <Filter className="size-4 shrink-0" />
 
-              {searchInput && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchInput("");
-                    setSearch("");
-                  }}
-                  className="
-        absolute
-        right-3
-        top-1/2
-        -translate-y-1/2
-        text-gray-400
-        hover:text-gray-700
-      "
-                >
-                  ✕
-                </button>
-              )}
-            </div>
+              <span className="truncate">
+                {search
+                  ? `Search for '${search}'`
+                  : activeFilterCount > 0
+                    ? `Filters (${activeFilterCount})`
+                    : "Filter"}
 
-            <select
-              value={sortBy}
-              onChange={(e) => {
-                setSortBy(e.target.value);
-                setPage(1);
-              }
-              }
-              className="
-            border rounded-md px-3 py-2
-            bg-white text-sm
-            min-w-[180px]
-          "
-            >
-              <option value="">
-                Sort By
-              </option>
+                {search && activeFilterCount > 0 && (
+                  <span className="text-gray-500">
+                    {" "}
+                    | Filters ({activeFilterCount})
+                  </span>
+                )}
+              </span>
+            </span>
 
-              <option value="title">
-                Title
-              </option>
-
-              <option value="status">
-                Status
-              </option>
-
-              <option value="assignee_name">
-                Assignee
-              </option>
-
-              <option value="priority">
-                Priority
-              </option>
-
-              <option value="startDate">
-                Start Date
-              </option>
-
-              <option value="dueDate">
-                Due Date
-              </option>
-            </select>
-
-            <select
-              value={order}
-              onChange={(e) => {
-                setOrder(
-                  e.target.value as "asc" | "desc"
-                );
-                setPage(1);
-              }
-              }
-              className="
-            border rounded-md px-3 py-2
-            bg-white text-sm
-            min-w-[140px]
-          "
-            >
-              <option value="asc">
-                Ascending
-              </option>
-
-              <option value="desc">
-                Descending
-              </option>
-            </select>
-
-          </div>
-
+            {filterOpen ? (
+              <X className="size-4 shrink-0" />
+            ) : (
+              <span className="text-gray-400">
+                {activeFilterCount > 0
+                  ? `(${activeFilterCount})`
+                  : ""}
+              </span>
+            )}
+          </button>
         </div>
 
+        {/* Mobile overlay */}
+        {filterOpen && (
+          <div
+            className="
+          absolute
+          inset-x-0
+          top-0
+          z-30
+          max-h-[calc(100dvh-8rem)]
+          overflow-y-auto
+          rounded-md
+          border
+          bg-white
+          p-4
+          shadow-lg
+          lg:hidden
+        "
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-medium text-gray-900">
+                Filter & Sorting
+              </h2>
+
+              <button
+                type="button"
+                onClick={() => setFilterOpen(false)}
+                className="
+              rounded-md
+              p-1
+              text-gray-400
+              hover:bg-gray-100
+              hover:text-gray-700
+            "
+                aria-label="Close filter"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <TaskFilters
+              assignee={assignee}
+              taskStatus={taskStatus}
+              priority={priority}
+              searchInput={searchInput}
+              sortBy={sortBy}
+              order={order}
+              members={members}
+              hasActiveFilters={hasActiveFilters}
+              onAssigneeChange={handleAssigneeChange}
+              onTaskStatusChange={handleTaskStatusChange}
+              onPriorityChange={handlePriorityChange}
+              onSearchChange={handleSearchChange}
+              onSortByChange={handleSortByChange}
+              onOrderChange={handleOrderChange}
+              onClearFilters={handleClearFilters}
+            />
+          </div>
+        )}
+
+        <div className="flex items-center justify-center mb-3">
+
+          {tasksFetching && (
+            <RefreshIndicator loading={tasksFetching} />
+          )}
+
+        </div>
+        <div className="flex-1 min-h-0">
+          <TasksTable
+            tasks={tasks}
+            pagination={pagination}
+            loading={loading}
+            fetching={tasksFetching}
+            error={error as Error | null}
+            onPageChange={setPage}
+            onLimitChange={setLimit}
+            onOpenTask={handleOpenTask}
+            onRetry={() => queryClient.invalidateQueries({
+              queryKey: ["projectTasks", projectId],
+            })}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={handleClearFilters} />
+        </div>
       </div>
 
       {/* {!loading && tasks.length === 0 && !hasActiveFilters ? (
@@ -602,29 +540,6 @@ export default function TasksPage() {
         </div>
       ) : */}
       {/* ( */}
-      <div className="flex items-center justify-center mb-3">
-
-        {tasksFetching && (
-          <RefreshIndicator loading={tasksFetching} />
-        )}
-
-      </div>
-      <div className="flex-1 min-h-0">
-        <TasksTable
-          tasks={tasks}
-          pagination={pagination}
-          loading={loading}
-          fetching={tasksFetching}
-          error={error as Error | null}
-          onPageChange={setPage}
-          onLimitChange={setLimit}
-          onOpenTask={handleOpenTask}
-          onRetry={() => queryClient.invalidateQueries({
-            queryKey: ["projectTasks", projectId],
-          })}
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={handleClearFilters} />
-      </div>
       {/* )} */}
 
       <AddTaskDialog

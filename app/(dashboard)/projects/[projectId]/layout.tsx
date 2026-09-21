@@ -73,7 +73,7 @@ export default function ProjectLayout({
 
         {/* Desktop Sidebar */}
         <div className="hidden shrink-0 md:block">
-          <ProjectSidebar />
+          <ProjectSidebar onMenuClicked={()=>{}} />
         </div>
 
         {/* Mobile Sidebar */}
@@ -102,7 +102,7 @@ export default function ProjectLayout({
               bg-white
             "
             >
-              <ProjectSidebar />
+              <ProjectSidebar onMenuClicked={() => { setSidebarOpen(false) }} />
             </div>
 
           </div>
@@ -139,7 +139,7 @@ export default function ProjectLayout({
 
           </div>
 
-            {/** flex-1 : take remaining height |
+          {/** flex-1 : take remaining height |
              *   min-h-0 : can shrink just to match remaining height if content's height more than remaining height to make overflow works
              * ---> boundaries */}
           <div className="min-h-0 flex-1 overflow-y-auto p-6">

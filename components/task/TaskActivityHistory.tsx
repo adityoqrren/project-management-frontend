@@ -188,8 +188,6 @@ export default function TaskActivityHistory({
   const activities =
     data?.pages.flatMap((page) => page.data) ?? [];
 
-  console.log(`activities: ${JSON.stringify(activities)}`);
-
   return (
     <section>
       <h2 className="text-sm font-medium text-gray-500">

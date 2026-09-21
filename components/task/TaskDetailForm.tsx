@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Trash2 } from "lucide-react";
+import { Trash2, X } from "lucide-react";
 
 import { ToastType, useToast } from "@/context/ToastContext";
 
@@ -32,6 +32,7 @@ import TaskAttachments from "./attachments/TaskAttachments";
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskActivityTabs from "./TaskActivityTabs";
 import TaskProperties from "./TaskProperties";
+import RichTextEditor from "../ui/editor/RichTextEditor";
 
 
 interface TaskDetailFormProps {
@@ -52,6 +53,8 @@ export default function TaskDetailForm({
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] =
     useState(false);
+
+  const [descriptionEditing, setDescriptionEditing] = useState(false);
 
   const [form, setForm] = useState({
     title: task.title,
@@ -223,6 +226,19 @@ export default function TaskDetailForm({
     }));
   };
 
+  const handleDescriptionEdit = () => {
+    setDescriptionEditing(true);
+  };
+
+  const handleDescriptionCancel = () => {
+    setForm((prev) => ({
+      ...prev,
+      description: task.description ?? "",
+    }));
+
+    setDescriptionEditing(false);
+  };
+
   return (
     <>
       <div className="flex min-h-0 flex-1 flex-col">
@@ -308,7 +324,7 @@ export default function TaskDetailForm({
                   Description
                 </label>
 
-                <textarea
+                {/* <textarea
                   value={form.description}
                   onChange={(event) =>
                     setForm((previous) => ({
@@ -331,7 +347,105 @@ export default function TaskDetailForm({
                   focus:ring-blue-400
                   disabled:bg-gray-100
                 "
-                />
+                /> */}
+
+                {descriptionEditing ? (
+                  <div className="space-y-2">
+                    <RichTextEditor
+                      content={form.description}
+                      onChange={(value) => {
+                          setForm((prev) => ({
+                            ...prev,
+                            description: value,
+                          }))
+                          console.log(`value detail task form: ${value}`)
+                        }
+                      }
+                    />
+
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={handleDescriptionCancel}
+                        className="
+                          inline-flex
+                          items-center
+                          gap-2
+                          rounded-md
+                          border
+                          border-red-300
+                          bg-transparent
+                          px-3
+                          py-2
+                          text-sm
+                          font-medium
+                          text-red-600
+                          transition
+                          hover:bg-red-50
+                          hover:text-red-700
+                        "
+                      >
+                        <X className="h-4 w-4" />
+                        Cancel changes
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={handleDescriptionEdit}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleDescriptionEdit();
+                      }
+                    }}
+                    className="
+                      min-h-24
+                      w-full
+                      cursor-text
+                      rounded-md
+                      border
+                      px-3
+                      py-2
+                      text-left
+                      text-sm
+                      hover:bg-gray-50
+                      focus:outline-none
+                      focus:ring-2
+                      focus:ring-gray-200
+                    "
+                  >
+                    {form.description ? (
+                      <div
+                        className="
+                          prose
+                          prose-sm
+                          max-w-none
+                          text-gray-900
+                          prose-headings:text-gray-900
+                          prose-p:my-1
+                          prose-ul:my-2
+                          prose-ol:my-2
+                          prose-li:my-0
+                          prose-blockquote:my-3
+                          prose-a:text-blue-600
+                          prose-a:underline
+                          hover:prose-a:text-blue-700
+                        "
+                        dangerouslySetInnerHTML={{
+                          __html: form.description,
+                        }}
+                      />
+                    ) : (
+                      <span className="text-gray-400">
+                        No description
+                      </span>
+                    )}
+                  </div>
+                )}
+
               </div>
 
               {/* Assignee */}
@@ -370,6 +484,7 @@ export default function TaskDetailForm({
                   priority={form.priority}
                   isActive={form.isActive}
                   canManageTask={canManageTask}
+                  canEdit={canEdit}
                   onStartDateChange={handleStartDateChange}
                   onDueDateChange={handleDueDateChange}
                   onStatusChange={handleStatusChange}
@@ -590,6 +705,7 @@ export default function TaskDetailForm({
                   priority={form.priority}
                   isActive={form.isActive}
                   canManageTask={canManageTask}
+                  canEdit={canEdit}
                   onStartDateChange={handleStartDateChange}
                   onDueDateChange={handleDueDateChange}
                   onStatusChange={handleStatusChange}

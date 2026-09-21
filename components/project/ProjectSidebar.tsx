@@ -6,7 +6,13 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 
-export default function ProjectSidebar() {
+interface ProjectSidebarProps {
+  onMenuClicked : () => void
+}
+
+export default function ProjectSidebar(
+  {onMenuClicked} : ProjectSidebarProps
+) {
   const pathname = usePathname();
 
   const {
@@ -67,6 +73,7 @@ export default function ProjectSidebar() {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={onMenuClicked}
                 className={`
                   px-3 py-2 rounded-md text-sm
                   ${

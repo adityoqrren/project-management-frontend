@@ -10,6 +10,7 @@ interface TaskPropertiesProps {
   priority: string;
   isActive: boolean;
   canManageTask: boolean;
+  canEdit: boolean;
   onStartDateChange: (value: string) => void;
   onDueDateChange: (value: string) => void;
   onStatusChange: (value: TaskStatus) => void;
@@ -54,6 +55,7 @@ export default function TaskProperties({
   priority,
   isActive,
   canManageTask,
+  canEdit,
   onStartDateChange,
   onDueDateChange,
   onStatusChange,
@@ -101,7 +103,7 @@ export default function TaskProperties({
           onChange={(event) =>
             onStatusChange(event.target.value as TaskStatus)
           }
-          disabled={!canManageTask}
+          disabled={!canEdit}
           className="
             mt-1
             w-full
