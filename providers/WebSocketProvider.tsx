@@ -98,6 +98,8 @@ export function WebSocketProvider({
     const socketRef =
         useRef<WebSocket | null>(null);
 
+    const connectingRef = useRef(false);
+
     const reconnectTimeoutRef =
         useRef<NodeJS.Timeout | null>(null);
 
@@ -198,7 +200,7 @@ export function WebSocketProvider({
             console.log("Invalidating task detail", {
                 taskId: data.entityId,
             });
-            
+
             queryClient.invalidateQueries({
                 queryKey: ["task", data.entityId],
                 refetchType: 'none',
@@ -252,112 +254,99 @@ export function WebSocketProvider({
         handler(message.data);
     };
 
-    const connectWebSocket =
-        async () => {
+    const connectWebSocket = async () => {
+        console.log("CONNECT CALLED", {
+            connecting: connectingRef.current,
+            socket: socketRef.current?.readyState,
+            shouldReconnect: shouldReconnectRef.current,
+            time: new Date().toISOString(),
+        });
 
-            // Prevent duplicate connection
-            if (
-                socketRef.current &&
-                (
-                    socketRef.current.readyState === WebSocket.OPEN ||
-                    socketRef.current.readyState === WebSocket.CONNECTING
-                )
-            ) {
+        if (connectingRef.current) {
+            console.log("CONNECT BLOCKED: already connecting");
+            return;
+        }
+
+        if (
+            socketRef.current &&
+            (
+                socketRef.current.readyState === WebSocket.OPEN ||
+                socketRef.current.readyState === WebSocket.CONNECTING
+            )
+        ) {
+            console.log("CONNECT BLOCKED: socket already exists");
+            return;
+        }
+
+        connectingRef.current = true;
+
+        console.log("CONNECT START");
+
+        try {
+            const token = await getWebSocketToken();
+
+            if (!shouldReconnectRef.current) {
+                connectingRef.current = false;
                 return;
             }
 
-            try {
+            console.log(
+                new Date().toLocaleTimeString(),
+                "Creating websocket..."
+            );
 
-                const token =
-                    await getWebSocketToken();
+            const ws = new WebSocket(
+                `${process.env.NEXT_PUBLIC_WS_URL}?token=${token}`
+            );
+
+            socketRef.current = ws;
+            connectingRef.current = false;
+
+            ws.onopen = () => {
+                console.log("WebSocket connected");
+                setConnected(true);
+            };
+
+            ws.onerror = (event) => {
+                console.error("WebSocket error", event);
+            };
+
+            ws.onclose = () => {
+                console.log(
+                    new Date().toLocaleTimeString(),
+                    "WebSocket disconnected"
+                );
+
+                setConnected(false);
+                socketRef.current = null;
 
                 if (!shouldReconnectRef.current) {
                     return;
                 }
 
-                console.log(
-                    new Date().toLocaleTimeString(),
-                    "Creating websocket..."
-                );
+                reconnectTimeoutRef.current = setTimeout(() => {
+                    console.log("CONNECT FROM ONCLOSE");
+                    connectWebSocket();
+                }, 3000);
+            };
 
-                const ws =
-                    new WebSocket(
-                        `${process.env.NEXT_PUBLIC_WS_URL}?token=${token}`
-                    );
+            ws.onmessage = handleMessage;
+        } catch (err) {
+            connectingRef.current = false;
 
-                socketRef.current = ws;
+            console.error(
+                "Failed to connect websocket",
+                err
+            );
 
-                ws.onopen = () => {
-
-                    console.log(
-                        "WebSocket connected"
-                    );
-
-                    setConnected(true);
-
-                };
-
-                ws.onerror = (event) => {
-
-                    console.error(
-                        "WebSocket error",
-                        event
-                    );
-
-                };
-
-                ws.onclose = () => {
-
-                    console.log(
-                        new Date().toLocaleTimeString(),
-                        "WebSocket disconnected"
-                    );
-
-                    setConnected(false);
-
-                    socketRef.current = null;
-
-                    if (
-                        !shouldReconnectRef.current
-                    ) {
-                        return;
-                    }
-
-                    reconnectTimeoutRef.current =
-                        setTimeout(() => {
-
-                            connectWebSocket();
-
-                        }, 3000);
-
-                };
-
-                // Will implement later
-                ws.onmessage = handleMessage
-
-            } catch (err) {
-
-                console.error(
-                    "Failed to connect websocket",
-                    err
-                );
-
-                if (
-                    shouldReconnectRef.current
-                ) {
-
-                    reconnectTimeoutRef.current =
-                        setTimeout(() => {
-
-                            connectWebSocket();
-
-                        }, 3000);
-
-                }
-
+            if (shouldReconnectRef.current) {
+                reconnectTimeoutRef.current = setTimeout(() => {
+                    console.log("CONNECT FROM CATCH");
+                    connectWebSocket();
+                }, 3000);
             }
-
-        };
+        }
+    };
 
     useEffect(() => {
 
@@ -384,6 +373,7 @@ export function WebSocketProvider({
         shouldReconnectRef.current =
             true;
 
+        console.log("CONNECT FROM EFFECT");
         connectWebSocket();
 
         return () => {

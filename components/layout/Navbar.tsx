@@ -8,6 +8,7 @@ import { useState, useRef, useEffect } from "react";
 import ErrorDialog from "../ui/ErrorDialog";
 import { useAuth } from "@/context/AuthContext";
 import NotificationBell from "../notification/NotificationBell";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -19,6 +20,7 @@ export default function Navbar() {
 
   const { setUser } = useAuth();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -43,10 +45,11 @@ export default function Navbar() {
     try {
       await logout();
 
+      queryClient.clear();
       setUser(null); // 🔥 langsung clear UI
 
       // Redirect to login after successful logout
-      router.push("/auth/login");
+      router.replace("/auth/login");
     } catch (err: unknown) {
       // Check if error is ApiError
       if (isApiError(err)) {

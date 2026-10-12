@@ -13,6 +13,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import ProjectFormDialog from "@/components/project/ProjectFormDialog";
+import { ToastType, useToast } from "@/context/ToastContext";
 
 
 export default function ProjectsPage() {
@@ -23,6 +24,8 @@ export default function ProjectsPage() {
   const searchParams = useSearchParams();
 
   const [open, setOpen] = useState(false);
+
+  const { showToast } = useToast()
 
   const [searchInput, setSearchInput] =
     useState(
@@ -131,13 +134,19 @@ export default function ProjectsPage() {
       mutationFn: createProject,
 
       onSuccess: () => {
+        showToast('Project created successfully');
+
         queryClient.invalidateQueries({
           queryKey: ["projects"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["dashboardProjects"],
         });
         setOpen(false)
       },
 
       onError: (error) => {
+        showToast('Failed create project', ToastType.error);
         console.error(error);
       },
     });

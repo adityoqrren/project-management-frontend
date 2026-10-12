@@ -266,7 +266,7 @@ export default function DashboardPage() {
             hover:text-green-700
           "
             >
-             {selectedCount > 5 ? `${selectedCount-5} more |` : ``} View All →
+              {selectedCount > 5 ? `${selectedCount - 5} more |` : ``} View All →
             </Link>
 
           </div>

@@ -26,7 +26,9 @@ export function register(data: {
 
 // GET CURRENT USER
 export function getUser() {
-  return apiFetch<MeResponse>("/api/auth/info");
+  return apiFetch<MeResponse>("/api/auth/info", {
+    skipAuthRedirect: true,
+  });
 }
 
 // LOGOUT
