@@ -2,7 +2,10 @@
 
 import { createContext, useContext, useState } from "react"
 
-type ToastType = "success" | "error"
+export enum ToastType {
+  success  = "success",
+  error = "error"
+}
 
 interface Toast {
   id: string
@@ -19,7 +22,7 @@ const ToastContext = createContext<ToastContextType | null>(null)
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
 
-  const showToast = (message: string, type: ToastType = "success") => {
+  const showToast = (message: string, type: ToastType = ToastType.success) => {
     const id = crypto.randomUUID()
 
     const newToast = { id, message, type }

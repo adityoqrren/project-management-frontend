@@ -15,6 +15,7 @@ export default function RegisterPage() {
     fullName: "",
     username: "",
     password: "",
+    confirmPassword: "",
   });
 
   const [errors, setErrors] = useState<{
@@ -22,6 +23,7 @@ export default function RegisterPage() {
     fullName?: string;
     username?: string;
     password?: string;
+    confirmPassword?: string;
     general?: string;
   }>({});
 
@@ -30,11 +32,34 @@ export default function RegisterPage() {
   const handleSubmit = async () => {
     const newErrors: typeof errors = {};
 
-    // Basic validation
-    if (!form.email) newErrors.email = "Email is required";
-    if (!form.fullName) newErrors.fullName = "Full name is required";
-    if (!form.username) newErrors.username = "Username is required";
-    if (!form.password) newErrors.password = "Password is required";
+    const email = form.email.trim();
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Input validation
+
+    if (!email) {
+      newErrors.email = "Email is required";
+    } else if (!emailPattern.test(email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    if (!form.fullName.trim()) {
+      newErrors.fullName = "Full name is required";
+    }
+
+    if (!form.username.trim()) {
+      newErrors.username = "Username is required";
+    }
+
+    if (!form.password) {
+      newErrors.password = "Password is required";
+    }
+
+    if (!form.confirmPassword) {
+      newErrors.confirmPassword = "Please confirm your password";
+    } else if (form.password !== form.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -121,16 +146,23 @@ export default function RegisterPage() {
               type="email"
               placeholder="Email"
               value={form.email}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, email: e.target.value }))
-              }
-              className={`w-full border rounded-md px-3 py-2 text-sm
+              onChange={(e) => {
+                const value = e.target.value;
+
+                setForm((prev) => ({ ...prev, email: value }));
+
+                if (errors.email) {
+                  setErrors((prev) => ({ ...prev, email: undefined }));
+                }
+              }}
+              className={`w-full rounded-md border px-3 py-2 text-sm
                 focus:outline-none focus:ring-2 focus:ring-green-400
                 ${errors.email ? "border-red-500" : ""}
               `}
             />
+
             {errors.email && (
-              <p className="text-xs text-red-500 mt-1">{errors.email}</p>
+              <p className="mt-1 text-xs text-red-500">{errors.email}</p>
             )}
           </div>
 
@@ -197,6 +229,40 @@ export default function RegisterPage() {
             )}
           </div>
 
+          {/* Confirm Password */}
+          <div>
+            <input
+              type="password"
+              placeholder="Confirm password"
+              value={form.confirmPassword}
+              onChange={(e) => {
+                const value = e.target.value;
+
+                setForm((prev) => ({
+                  ...prev,
+                  confirmPassword: value,
+                }));
+
+                if (errors.confirmPassword) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    confirmPassword: undefined,
+                  }));
+                }
+              }}
+              className={`w-full rounded-md border px-3 py-2 text-sm
+                  focus:outline-none focus:ring-2 focus:ring-green-400
+                  ${errors.confirmPassword ? "border-red-500" : ""}
+                `}
+            />
+
+            {errors.confirmPassword && (
+              <p className="mt-1 text-xs text-red-500">
+                {errors.confirmPassword}
+              </p>
+            )}
+          </div>
+
           {/* Button */}
           <button
             onClick={handleSubmit}
@@ -245,7 +311,7 @@ type SocialButtonProps = {
 
 function SocialButton({ icon, label, onClick }: SocialButtonProps) {
   return (
-    <button 
+    <button
       onClick={onClick}
       className="w-full flex items-center justify-center gap-2 border rounded-md py-2 text-sm font-medium hover:bg-gray-50 transition-colors duration-200 active:scale-[0.98]"
     >

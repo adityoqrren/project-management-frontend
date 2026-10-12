@@ -16,6 +16,7 @@ let failedQueue: {
 
 type ApiFetchOptions = RequestInit & {
   skipAuthRefresh?: boolean;
+  skipAuthRedirect?: boolean;
 };
 
 // 🔥 Process all queued requests
@@ -31,16 +32,37 @@ function processQueue(error: unknown | null) {
   failedQueue = [];
 }
 
+const apiFetchInstanceId =
+  Math.random().toString(36).slice(2, 8);
+
+console.log(
+  "[apiFetch module loaded]",
+  apiFetchInstanceId
+);
+
 export async function apiFetch<T>(
   endpoint: string,
   options: ApiFetchOptions = {}
 ): Promise<T> {
+  console.log(
+    "[401]",
+    apiFetchInstanceId,
+    endpoint,
+    {
+      isRefreshing,
+    }
+  );
+
   const doFetch = async (): Promise<Response> => {
+    const isFormData = options.body instanceof FormData;
+
     return fetch(`${BASE_URL}${endpoint}`, {
       ...options,
-      credentials: "include", // 🔥 send cookies
+      credentials: "include",
       headers: {
-        "Content-Type": "application/json",
+        ...(isFormData
+          ? {}
+          : { "Content-Type": "application/json" }),
         ...(options.headers || {}),
       },
     });
@@ -52,6 +74,12 @@ export async function apiFetch<T>(
   if (res.status === 401 && !options.skipAuthRefresh) {
     console.log(`token expired? ${JSON.stringify(res.body)}`)
     // If refresh already in progress → queue this request
+
+    console.log("[401]", endpoint, {
+      isRefreshing,
+      skipAuthRefresh: options.skipAuthRefresh,
+    });
+
     if (isRefreshing) {
       return new Promise<T>((resolve, reject) => {
         failedQueue.push({
@@ -72,16 +100,34 @@ export async function apiFetch<T>(
     isRefreshing = true;
 
     try {
-      // 🔥 Call refresh token endpoint
+      const refreshId = Math.random().toString(36).slice(2, 8);
+
+      console.log(
+        `[REFRESH ${refreshId}] START`,
+        new Date().toISOString()
+      );
+
+      // get new access token with refreshToken
       const refreshRes = await fetch(`${BASE_URL}/api/auth/token`, {
         method: "PUT",
         credentials: "include",
       });
 
+      console.log(
+        `[REFRESH ${refreshId}] END`,
+        refreshRes.status,
+        new Date().toISOString()
+      );
+
       if (!refreshRes.ok) {
+
+        if (refreshRes.status === 401) {
+          throw new ApiError("Session expired", 401);
+        }
+
         throw new ApiError(
-          "Session expired",
-          401
+          "Failed to refresh session",
+          refreshRes.status
         );
       }
 
@@ -90,28 +136,31 @@ export async function apiFetch<T>(
 
       // Retry original request
       res = await doFetch();
-    } catch {
-      const authError = new ApiError(
-        "Session expired",
-        401
-      );
+    } catch (error) {
+
+      console.log(`error : ${error}`);
 
       // Reject all queued requests
-      processQueue(authError);
+      processQueue(error);
 
-      // Redirect only once
+      // Redirect only when refresh token is invalid or expired
       if (
-        typeof window !== "undefined" &&
-        !isRedirecting
+        error instanceof ApiError &&
+        error.statusCode === 401 &&
+        !options.skipAuthRedirect
       ) {
-        isRedirecting = true;
+        if (
+          typeof window !== "undefined" &&
+          !isRedirecting
+        ) {
+          isRedirecting = true;
 
-        window.location.replace("/auth/login");
+          window.location.replace("/auth/login");
+        }
       }
 
-      throw authError;
-    }
-    finally {
+      throw error;
+    } finally {
       isRefreshing = false;
     }
   }

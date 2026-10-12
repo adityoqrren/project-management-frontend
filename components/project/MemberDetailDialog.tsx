@@ -5,11 +5,12 @@ import { ApiError } from "@/lib/errors"
 import { updateMemberActiveStatus } from "@/lib/project"
 import { Member } from "@/types/project"
 import { useState } from "react"
-import { useToast } from "@/context/ToastContext"
+import { ToastType, useToast } from "@/context/ToastContext"
 
 interface Props {
   projectId: string
   member: Member
+  canManageProject: boolean
   onClose: () => void
   onStatusChanged: (
     memberId: string,
@@ -20,6 +21,7 @@ interface Props {
 export default function MemberDetailDialog({
   projectId,
   member,
+  canManageProject,
   onClose,
   onStatusChanged
 }: Props) {
@@ -60,11 +62,11 @@ export default function MemberDetailDialog({
       //console.error(error)
 
       if (error instanceof ApiError) {
-        showToast(error.message, "error")
+        showToast(error.message, ToastType.error)
       } else {
         showToast(
           "Failed to update member status",
-          "error"
+          ToastType.error
         )
       }
     } finally {
@@ -118,7 +120,7 @@ export default function MemberDetailDialog({
 
         </div>
 
-        {!isLeader && (
+        {(!isLeader && canManageProject) && (
           <div className="mt-8">
 
             <button

@@ -7,10 +7,11 @@ import { Member, User } from "@/types/project"
 import AssigneeSelector from "../ui/AssigneeSelector"
 import { Priority, Task, TaskStatus } from "@/types/task"
 import { title } from "process"
-import { useToast } from "@/context/ToastContext"
+import { ToastType, useToast } from "@/context/ToastContext"
 import { createTask } from "@/lib/task"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { invalidateDashboard } from "@/lib/dashboard"
+import RichTextEditor from "../ui/editor/RichTextEditor"
 
 interface AddTaskDialogProps {
   isOpen: boolean
@@ -82,7 +83,7 @@ export default function AddTaskDialog({
 
       showToast(
         "Failed to create task",
-        "error"
+        ToastType.error
       );
     },
   });
@@ -242,7 +243,7 @@ export default function AddTaskDialog({
                 Description
               </label>
 
-              <textarea
+              {/* <textarea
                 value={form.description}
                 onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
                 rows={4}
@@ -251,6 +252,11 @@ export default function AddTaskDialog({
                 focus:ring-2 focus:ring-blue-400
                 "
                 placeholder="Task description..."
+              /> */}
+
+              <RichTextEditor
+                content={form.description}
+                onChange={(value) => setForm((prev) => ({ ...prev, description: value }))}
               />
             </div>
 

@@ -59,9 +59,40 @@ export default function GeneralSettingsCard({
             Description
           </p>
 
-          <p className="mt-1 whitespace-pre-wrap">
-            {project.description || "-"}
-          </p>
+          <div className="mt-1 whitespace-pre-wrap">
+            {project.description ? (
+              <div
+                className="
+                    prose
+                    prose-sm
+                    max-w-none
+                    text-gray-900
+                    prose-headings:text-gray-900
+                    prose-p:my-1
+                    prose-ul:my-2
+                    prose-ol:my-2
+                    prose-li:my-0
+                    prose-blockquote:my-3
+                    prose-a:text-blue-600
+                    prose-a:underline
+                    hover:prose-a:text-blue-700
+                  "
+                dangerouslySetInnerHTML={{
+                  __html: project.description,
+                }}
+              />
+            ) : (
+              <p
+                className="
+                  mt-4
+                  italic
+                  text-gray-400
+                "
+              >
+                No description yet.
+              </p>
+            )}
+          </div>
 
         </div>
 

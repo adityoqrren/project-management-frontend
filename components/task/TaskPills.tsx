@@ -14,7 +14,8 @@ interface TaskPillsProps {
   dueFilter: string;
   onChange: (
     taskStatus: string,
-    dueFilter: string
+    dueFilter: string,
+    count: number,
   ) => void;
 }
 
@@ -33,37 +34,37 @@ export default function TaskPills({
       active:
         taskStatus === "" &&
         dueFilter === "",
-      onClick: () => onChange("", ""),
+      onClick: () => onChange("", "", counts?.all ?? 0),
     },
     {
       label: "Todo",
       count: counts?.todo ?? 0,
       active: taskStatus === "TODO",
-      onClick: () => onChange("TODO", ""),
+      onClick: () => onChange("TODO", "", counts?.todo ?? 0),
     },
     {
       label: "In Progress",
       count: counts?.inProgress ?? 0,
       active: taskStatus === "IN_PROGRESS",
-      onClick: () => onChange("IN_PROGRESS", ""),
+      onClick: () => onChange("IN_PROGRESS", "", counts?.inProgress ?? 0),
     },
     {
       label: "Due Soon",
       count: counts?.dueSoon ?? 0,
       active: dueFilter === "dueSoon",
-      onClick: () => onChange("", "dueSoon"),
+      onClick: () => onChange("", "dueSoon", counts?.dueSoon ?? 0),
     },
     {
       label: "Overdue",
       count: counts?.overdue ?? 0,
       active: dueFilter === "overdue",
-      onClick: () => onChange("", "overdue"),
+      onClick: () => onChange("", "overdue", counts?.overdue ?? 0),
     },
     {
       label: "Done",
       count: counts?.done ?? 0,
       active: taskStatus === "DONE",
-      onClick: () => onChange("DONE", ""),
+      onClick: () => onChange("DONE", "", counts?.done ?? 0),
     },
   ];
 

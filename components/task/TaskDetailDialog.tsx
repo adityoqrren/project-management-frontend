@@ -7,7 +7,7 @@ import DateTimePicker from "@/components/ui/DateTimePicker"
 import { Member } from "@/types/project"
 import { Priority, Task, TaskStatus } from "@/types/task"
 import ConfirmDialog from "../ui/ConfirmDialog"
-import { useToast } from "@/context/ToastContext"
+import { ToastType, useToast } from "@/context/ToastContext"
 import { assignTask, deleteTask, updateTask, updateTaskProgress } from "@/lib/task"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { getProjectMembers } from "@/lib/project"
@@ -152,7 +152,7 @@ export default function TaskDetailDialog({
 
       showToast(
         "Failed to update task",
-        "error"
+        ToastType.error
       );
     },
   });
@@ -190,7 +190,7 @@ export default function TaskDetailDialog({
 
       showToast(
         "Failed to delete task",
-        "error"
+        ToastType.error
       );
     },
   });

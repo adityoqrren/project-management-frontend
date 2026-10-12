@@ -1,9 +1,6 @@
 "use client";
 
-import Link from "next/link";
 import { Task } from "@/types/task";
-import PriorityBadge from "../ui/PriorityBadge";
-import TaskStatusBadge from "../ui/TaskStatusBadge";
 
 type DashboardTasksProps = {
   tasks: Task[];
@@ -33,23 +30,6 @@ export default function DashboardTasks({
 
   return (
     <section>
-
-      <div className="flex items-center justify-end mb-4">
-
-        <Link
-          href="/tasks"
-          className="
-            text-sm
-            font-medium
-            text-green-600
-            hover:text-green-700
-          "
-        >
-          View All →
-        </Link>
-
-      </div>
-
 
       {loading ? (
 

@@ -22,6 +22,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const fetchUser = useCallback(async () => {
+    // console.log("FETCH USER CALLED");
+    
     try {
       const res = await getUser();
       setUser(res.data);
@@ -37,14 +39,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // useEffect(() => {
+  //   console.log("AUTH PROVIDER MOUNT");
+
+  //   return () => {
+  //     console.log("AUTH PROVIDER UNMOUNT");
+  //   };
+  // }, []);
+
   // Fetch once when app loads
   useEffect(() => {
-    if (pathname.startsWith("/auth")) {
-      setLoading(false);
-      return;
-    }
+    // console.log("FETCH USER EFFECT");
     fetchUser();
-  }, []);
+  }, [fetchUser]);
 
   return (
     <AuthContext.Provider

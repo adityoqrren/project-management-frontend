@@ -6,6 +6,8 @@ import { getProjectMembers } from "@/lib/project"
 import { Member } from "@/types/project"
 import MemberDetailDialog from "@/components/project/MemberDetailDialog"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useAuth } from "@/context/AuthContext"
+import AddMemberDialog from "@/components/project/AddMemberProject"
 
 type FilterType =
   | "ALL"
@@ -14,12 +16,15 @@ type FilterType =
 
 export default function ProjectTeamPage() {
   const { projectId } = useParams<{ projectId: string }>()
+  const { user } = useAuth();
 
   const [filter, setFilter] =
     useState<FilterType>("ALL")
 
   const [selectedMember, setSelectedMember] =
     useState<Member | null>(null)
+
+  const [open, setOpen] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -32,6 +37,12 @@ export default function ProjectTeamPage() {
     queryFn: () => getProjectMembers(projectId),
     enabled: !!projectId,
   });
+
+  const refreshMembers = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["projectMembers", projectId],
+    });
+  };
 
   const members: Member[] = useMemo(() => {
     return (
@@ -60,6 +71,8 @@ export default function ProjectTeamPage() {
       ),
     [members]
   )
+
+  const canManageProject = leader?.userId == user?.id
 
   const filteredMembers = useMemo(() => {
     switch (filter) {
@@ -116,6 +129,15 @@ export default function ProjectTeamPage() {
           Manage project members and access.
         </p>
       </div>
+
+      {canManageProject && (
+        <button
+          onClick={() => setOpen(true)}
+          className="text-sm px-3 py-1 rounded bg-black text-white"
+        >
+          Add Member
+        </button>
+      )}
 
       {/* Leader */}
 
@@ -257,8 +279,17 @@ export default function ProjectTeamPage() {
           member={selectedMember}
           onClose={() => setSelectedMember(null)}
           projectId={projectId}
+          canManageProject={canManageProject}
           onStatusChanged={handleMemberStatusChanged} />
       )}
+
+      <AddMemberDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        projectId={projectId}
+        currentMembers={members}
+        onAdded={refreshMembers}
+      />
 
     </div>
   )

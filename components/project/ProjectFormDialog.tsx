@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import Modal from "@/components/ui/Modal";
 import { ProjectCreation } from "@/types/project";
+import RichTextEditor from "../ui/editor/RichTextEditor";
 
 interface ProjectFormDialogProps {
 
@@ -146,7 +147,7 @@ export default function ProjectFormDialog({
               Description
             </label>
 
-            <textarea
+            {/* <textarea
               rows={3}
               value={form.description}
               onChange={(e) =>
@@ -167,6 +168,16 @@ export default function ProjectFormDialog({
                 focus:ring-2
                 focus:ring-blue-400
               "
+            /> */}
+
+            <RichTextEditor
+              content={form.description}
+              onChange={(value) =>
+                  handleChange(
+                  "description",
+                  value
+                )
+              }
             />
 
           </div>

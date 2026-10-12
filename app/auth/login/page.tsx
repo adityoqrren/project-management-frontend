@@ -84,6 +84,9 @@ export default function LoginPage() {
     }
   }
 
+  console.log("APP ENV:", process.env.NEXT_PUBLIC_API_URL);
+  console.log("NODE ENV:", process.env.NODE_ENV);
+
   return (
     <div className="min-h-screen flex items-center justify-center relative">
 
