@@ -9,6 +9,7 @@ export interface UserInfo {
   name: string;
   email: string;
   createdAt: string;
+  photoProfile?: string | null;
 }
 
 export interface MeResponse {

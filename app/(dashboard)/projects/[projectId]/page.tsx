@@ -68,13 +68,7 @@ export default function ProjectOverviewPage() {
 
   const members: Member[] = useMemo(() => {
     return (
-      membersData?.data.map((m) => ({
-        memberId: m.memberId,
-        userId: m.userId,
-        name: m.name,
-        role: m.role === "LEADER" ? "LEADER" : "MEMBER",
-        isActive: m.isActive,
-      })) ?? []
+      membersData?.data ?? []
     );
   }, [membersData]);
 

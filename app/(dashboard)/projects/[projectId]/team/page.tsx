@@ -8,6 +8,9 @@ import MemberDetailDialog from "@/components/project/MemberDetailDialog"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/context/AuthContext"
 import AddMemberDialog from "@/components/project/AddMemberProject"
+import { getAvatarColor } from "@/lib/getAvatarColor"
+import { getInitials } from "@/lib/getInitials"
+import Image from "next/image"
 
 type FilterType =
   | "ALL"
@@ -45,15 +48,7 @@ export default function ProjectTeamPage() {
   };
 
   const members: Member[] = useMemo(() => {
-    return (
-      membersData?.data.map((m) => ({
-        memberId: m.memberId,
-        userId: m.userId,
-        name: m.name,
-        role: m.role === "LEADER" ? "LEADER" : "MEMBER",
-        isActive: m.isActive,
-      })) ?? []
-    );
+    return membersData?.data ?? []
   }, [membersData]);
 
   const leader = useMemo(
@@ -158,14 +153,35 @@ export default function ProjectTeamPage() {
           >
             <div className="flex justify-between items-center">
 
-              <div>
-                <p className="font-medium">
-                  {leader.name}
-                </p>
+              <div className="flex items-center">
+                <span
+                  className={`flex h-9 w-9 mr-2 shrink-0 items-center justify-center
+                      overflow-hidden rounded-full text-xs font-semibold
+                      ${getAvatarColor(leader.memberId)}
+                    `}
+                >
+                  {leader?.photoProfile ? (
+                    <Image
+                      src={leader.photoProfile}
+                      alt={`${leader.name}'s profile`}
+                      width={36}
+                      height={36}
+                      className="h-full w-full object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    getInitials(leader.name)
+                  )}
+                </span>
+                <div>
+                  <p className="font-medium">
+                    {leader.name}
+                  </p>
 
-                <p className="text-sm text-gray-500">
-                  @{leader.username}
-                </p>
+                  <p className="text-sm text-gray-500">
+                    @{leader.username}
+                  </p>
+                </div>
               </div>
 
               <span
@@ -234,14 +250,35 @@ export default function ProjectTeamPage() {
             >
               <div className="flex justify-between items-center">
 
-                <div>
-                  <p className="font-medium">
-                    {member.name}
-                  </p>
+                <div className="flex items-center">
+                  <span
+                    className={`flex h-9 w-9 mr-2 shrink-0 items-center justify-center
+                      overflow-hidden rounded-full text-xs font-semibold
+                      ${getAvatarColor(member.memberId)}
+                    `}
+                  >
+                    {member?.photoProfile ? (
+                      <Image
+                        src={member.photoProfile}
+                        alt={`${member.name}'s profile`}
+                        width={36}
+                        height={36}
+                        className="h-full w-full object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      getInitials(member.name)
+                    )}
+                  </span>
+                  <div>
+                    <p className="font-medium">
+                      {member.name}
+                    </p>
 
-                  <p className="text-sm text-gray-500">
-                    @{member.username}
-                  </p>
+                    <p className="text-sm text-gray-500">
+                      @{member.username}
+                    </p>
+                  </div>
                 </div>
 
                 {member.isActive ? (

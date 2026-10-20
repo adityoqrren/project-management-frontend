@@ -2,8 +2,8 @@
 
 import NotificationItem from "@/components/notification/NotificationItem";
 import NotificationSkeleton from "@/components/notification/NotificationSkeleton";
-import { getNotifications, markAllNotificationsAsRead } from "@/lib/notifications";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { getNotifications, getUnreadNotificationCount, markAllNotificationsAsRead } from "@/lib/notifications";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
 ;
 export default function NotificationPage() {
@@ -30,6 +30,13 @@ export default function NotificationPage() {
         getNextPageParam: (lastPage) =>
             lastPage.pagination.nextCursor,
     });
+
+    const { data: notificationUnreadData } = useQuery({
+        queryKey: ["notificationUnreadCount"],
+        queryFn: getUnreadNotificationCount,
+    });
+
+    const unreadCount = notificationUnreadData?.data.count ?? 0;
 
     const handleMarkAllAsRead =
         async () => {
@@ -115,13 +122,16 @@ export default function NotificationPage() {
 
                     <h1 className="text-2xl font-semibold">
                         Notifications
+                        {unreadCount > 0 && (<p className="text-sm text-gray-500">{unreadCount} unread notification</p>)}
                     </h1>
-                    <button
-                        onClick={handleMarkAllAsRead}
-                        className="bg-black hover:bg-gray-400 active:scale-95 px-4 py-2 text-white rounded-md transition-all duration-150 transform"
-                    >
-                        Mark all as read
-                    </button>
+                    {unreadCount > 0 && (
+                        <button
+                            onClick={handleMarkAllAsRead}
+                            className="bg-black hover:bg-gray-400 active:scale-95 px-4 py-2 text-white rounded-md transition-all duration-150 transform"
+                        >
+                            Mark all as read
+                        </button>
+                    )}
 
                     {/* <div
                     onClick={handleMarkAllAsRead}
@@ -143,10 +153,10 @@ export default function NotificationPage() {
 
                 <div
                     className="
-        rounded-lg
-        border
-        bg-white
-    "
+                        rounded-lg
+                        border
+                        bg-white
+                    "
                 >
 
                     {notifications.map(

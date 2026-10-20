@@ -81,6 +81,7 @@ export default function DashboardTasks({
             border
             divide-y
             overflow-hidden
+            bg-white
           "
         >
 

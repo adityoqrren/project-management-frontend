@@ -9,16 +9,18 @@ import ErrorDialog from "../ui/ErrorDialog";
 import { useAuth } from "@/context/AuthContext";
 import NotificationBell from "../notification/NotificationBell";
 import { useQueryClient } from "@tanstack/react-query";
+import { getInitials } from "@/lib/getInitials";
+import Image from "next/image"
+import { getAvatarColor } from "@/lib/getAvatarColor";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { user, loading } = useAuth();
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { setUser } = useAuth();
+  const { user, loading, setUser } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -75,14 +77,34 @@ export default function Navbar() {
 
         {/* Avatar + Dropdown */}
         <div className="flex items-center gap-3">
-          <NotificationBell/>
+          <NotificationBell />
 
           <div className="relative" ref={dropdownRef}>
             {/* Avatar button */}
-            <div
+            <button
+              type="button"
               onClick={() => setOpen((prev) => !prev)}
-              className="w-8 h-8 bg-gray-300 rounded-full cursor-pointer"
-            />
+              aria-label="Open profile menu"
+              aria-expanded={open}
+              className={`flex h-9 w-9 items-center justify-center overflow-hidden
+    rounded-full text-sm font-semibold ring-1 ${user?.id
+                  ? getAvatarColor(user.id)
+                  : "bg-gray-100 text-gray-600"
+                }`}
+            >
+              {user?.photoProfile ? (
+                <Image
+                  src={user.photoProfile}
+                  alt={`${user.name}'s profile`}
+                  width={36}
+                  height={36}
+                  className="h-full w-full object-cover"
+                  unoptimized
+                />
+              ) : (
+                getInitials(user?.name)
+              )}
+            </button>
 
             {/* Dropdown */}
             {open && (
@@ -96,9 +118,13 @@ export default function Navbar() {
                 <hr className="my-2" />
 
                 {/* Settings */}
-                <button className="w-full text-left text-sm py-1 hover:bg-gray-100 rounded px-2">
+                <Link
+                  href="/settings"
+                  onClick={() => setOpen(false)}
+                  className="block w-full rounded px-2 py-1 text-left text-sm hover:bg-gray-100"
+                >
                   Settings
-                </button>
+                </Link>
 
                 <hr className="my-2" />
 

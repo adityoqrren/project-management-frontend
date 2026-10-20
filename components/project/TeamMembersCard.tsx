@@ -5,6 +5,9 @@ import { useState } from "react";
 import AddMemberDialog from "./AddMemberProject";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import { getAvatarColor } from "@/lib/getAvatarColor";
+import { getInitials } from "@/lib/getInitials";
+import Image from "next/image"
 
 interface TeamMembersCardProps {
   members: Member[];
@@ -76,11 +79,27 @@ export default function TeamMembersCard({
           ${isCurrentUser ? "bg-green-50 border border-green-200" : ""}
         `}
             >
-              <div>
-
-                <span className="font-medium">
-                  {member.name}
+              <div className="flex items-center font-medium">
+                <span
+                  className={`flex h-9 w-9 mr-2 shrink-0 items-center justify-center
+                    overflow-hidden rounded-full text-xs font-semibold
+                    ${getAvatarColor(member.memberId)}
+                  `}
+                >
+                  {member?.photoProfile ? (
+                    <Image
+                      src={member.photoProfile}
+                      alt={`${member.name}'s profile`}
+                      width={36}
+                      height={36}
+                      className="h-full w-full object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    getInitials(member.name)
+                  )}
                 </span>
+                {member.name}
 
                 {isCurrentUser && (
                   <span className="ml-2 text-xs text-green-600">
