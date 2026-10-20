@@ -29,7 +29,6 @@ export default function TasksPage() {
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [openDetailTaskDialog, setOpenDetailTaskDialog] = useState(false)
-  const [openAddTaskDialog, setOpenAddTaskDialog] = useState(false)
 
   const [projectId, setProjectId] =
     useState(
@@ -184,20 +183,6 @@ export default function TasksPage() {
     queryFn: () => getProjects({}),
   })
 
-  const {
-    data: membersData,
-  } = useQuery({
-    queryKey: [
-      "projectMembers",
-      selectedTask?.project.id,
-    ],
-    queryFn: () =>
-      getProjectMembers(
-        selectedTask!.project.id
-      ),
-    enabled: !!selectedTask,
-  })
-
   const projects = projectsData?.data ?? [];
 
   const tasks = tasksData?.data ?? [];
@@ -210,28 +195,14 @@ export default function TasksPage() {
       }
       : createEmptyPagination(limit);
 
-  const currentMember =
-    membersData?.data.find(
-      (m) => m.userId === user?.id
-    );
-
-  const canManageTask =
-    currentMember?.role === "LEADER";
-
-  const canUpdateProgress =
-    currentMember?.role === "MEMBER" &&
-    selectedTask?.assignee?.memberId === currentMember.memberId;
-
   const handleOpenTask = (task: Task) => {
-    setSelectedTask(task)
-    console.log(`selected task title: ${task.title}`)
-    console.log(selectedTask?.title)
-    setOpenDetailTaskDialog(true)
-  }
+    const query = searchParams.toString();
 
-  const handleCloseDetailDialog = () => {
-    setSelectedTask(null)
-    setOpenDetailTaskDialog(false)
+    router.push(
+      query
+        ? `/projects/${task.project.id}/tasks/${task.id}?${query}`
+        : `/projects/${task.project.id}/tasks/${task.id}`
+    );
   }
 
   const handleClearFilters = () => {
@@ -532,14 +503,14 @@ export default function TasksPage() {
             onLimitChange={setLimit}
             onOpenTask={handleOpenTask}
             onRetry={() => queryClient.invalidateQueries({
-              queryKey: ["myTasks", projectId],
+              queryKey: ["myTasks"],
             })}
             hasActiveFilters={hasActiveFilters}
             onClearFilters={handleClearFilters} />
         </div>
         {/* )} */}
 
-        {selectedTask && (
+        {/* {selectedTask && (
           <TaskDetailDialog
             key={selectedTask.id}
             open={openDetailTaskDialog}
@@ -549,7 +520,7 @@ export default function TasksPage() {
             canManageTask={canManageTask}
             canUpdateProgress={canUpdateProgress}
           />
-        )}
+        )} */}
 
       </div>
     </div>

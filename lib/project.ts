@@ -1,4 +1,4 @@
-import { Project, ProjectCreation, ProjectResponse, Role } from "@/types/project";
+import { Member, Project, ProjectCreation, ProjectResponse, Role } from "@/types/project";
 import { apiFetch } from "./api";
 import { mapProjectResponseToProject } from "./mappers/projectMapper";
 
@@ -120,14 +120,7 @@ export async function getProjectById(projectId: string) {
 export async function getProjectMembers(projectId: string) {
   return apiFetch<{
     status: string;
-    data: {
-      memberId: string;
-      userId: string;
-      name: string;
-      role: string;
-      isActive: boolean;
-      joinedAt: string;
-    }[];
+    data: Member[];
   }>(`/api/projects/${projectId}/members`);
 }
 

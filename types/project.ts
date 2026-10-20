@@ -47,6 +47,7 @@ export type Member = {
   userId: string,
   name: string,
   username?: string,
+  photoProfile?: string | null,
   role: Role,
   isActive: boolean
 }

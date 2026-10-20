@@ -23,7 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUser = useCallback(async () => {
     // console.log("FETCH USER CALLED");
-    
+
     try {
       const res = await getUser();
       setUser(res.data);
@@ -39,6 +39,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // prevent linter warning cascading render
+  const loadUserFirstTime = async () => {
+    // console.log("FETCH USER CALLED");
+    try {
+      const res = await getUser();
+      return res.data;
+    } catch (err) {
+      if (err instanceof ApiError && err.statusCode === 401) {
+        return null;
+      }
+
+      throw err;
+    }
+  }
+
   // useEffect(() => {
   //   console.log("AUTH PROVIDER MOUNT");
 
@@ -50,8 +65,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Fetch once when app loads
   useEffect(() => {
     // console.log("FETCH USER EFFECT");
-    fetchUser();
-  }, [fetchUser]);
+    // cancelled prevent updating states when effect is cleaned (eg : when component unmounted)
+    // using promise handling manually here to prevent linter cascading render warning
+    let cancelled = false;
+    loadUserFirstTime()
+      .then((user) => {
+        if (!cancelled) {
+          setUser(user);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error("Auth error:", err);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    // clean up function
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <AuthContext.Provider
