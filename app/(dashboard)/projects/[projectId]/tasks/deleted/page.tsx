@@ -3,8 +3,6 @@
 import TasksTable from "@/components/task/TaskTable";
 import { Task, TaskStatus } from "@/types/task";
 import { useEffect, useMemo, useState } from "react"
-import TaskDetailDialog from "@/components/task/TaskDetailDialog"
-import AddTaskDialog from "@/components/task/AddTaskDialog";
 import {
   useParams,
   useSearchParams,

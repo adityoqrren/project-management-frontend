@@ -18,7 +18,6 @@ import { useAuth } from "@/context/AuthContext";
 import TaskPills from "@/components/task/TaskPills";
 import DashboardTasks from "@/components/dashboard/DashboardTasks";
 import { Task } from "@/types/task";
-import TaskDetailDialog from "@/components/task/TaskDetailDialog";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
