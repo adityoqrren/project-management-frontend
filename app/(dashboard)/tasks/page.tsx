@@ -1,9 +1,8 @@
 "use client"
 
-import TaskDetailDialog from "@/components/task/TaskDetailDialog"
 import TasksTable from "@/components/task/TaskTable"
 import { useAuth } from "@/context/AuthContext"
-import { getProjectMembers, getProjects } from "@/lib/project"
+import { getProjects } from "@/lib/project"
 import { getMyTasks } from "@/lib/task"
 import { Task } from "@/types/task"
 import {

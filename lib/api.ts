@@ -119,10 +119,20 @@ export async function apiFetch<T>(
         new Date().toISOString()
       );
 
+      const refreshData = await refreshRes.json();
+
       if (!refreshRes.ok) {
+
+        const isMissingRefreshToken =
+          refreshRes.status === 400 &&
+          refreshData.message === "refresh token cannot be null or empty";
 
         if (refreshRes.status === 401) {
           throw new ApiError("Session expired", 401);
+        }
+
+        if (isMissingRefreshToken) {
+          throw new ApiError("Token is missing", 401);
         }
 
         throw new ApiError(
@@ -144,19 +154,19 @@ export async function apiFetch<T>(
       processQueue(error);
 
       // Redirect only when refresh token is invalid or expired
-      if (
-        error instanceof ApiError &&
-        error.statusCode === 401 &&
-        !options.skipAuthRedirect
-      ) {
+      if (error instanceof ApiError && error.statusCode === 401) {
+        // Redirect only when allowed.
         if (
+          !options.skipAuthRedirect &&
           typeof window !== "undefined" &&
           !isRedirecting
         ) {
           isRedirecting = true;
-
           window.location.replace("/auth/login");
         }
+      } else {
+        // Log unexpected refresh failures.
+        console.error("Token refresh failed:", error);
       }
 
       throw error;

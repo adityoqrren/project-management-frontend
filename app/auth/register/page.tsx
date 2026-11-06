@@ -1,11 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { register } from "@/lib/auth";
 import { isApiError } from "@/lib/errors";
+import {
+  Turnstile,
+  type TurnstileInstance,
+} from "@marsidev/react-turnstile";
+import { useToast } from "@/context/ToastContext";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -28,6 +33,11 @@ export default function RegisterPage() {
   }>({});
 
   const [loading, setLoading] = useState(false);
+
+  const { showToast } = useToast()
+
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileInstance>(null);
 
   const handleSubmit = async () => {
     const newErrors: typeof errors = {};
@@ -66,16 +76,29 @@ export default function RegisterPage() {
       return;
     }
 
+    // Check Turnstile verification
+    if (!turnstileToken) {
+      setErrors({
+        general: "Please complete the security verification.",
+      });
+      return;
+    }
+
     setErrors({});
     setLoading(true);
 
+    const submittedToken = turnstileToken;
+
     try {
       await register({
-        email: form.email,
-        username: form.username,
+        email,
+        username: form.username.trim(),
         password: form.password,
-        name: form.fullName, // map ke backend
+        name: form.fullName.trim(), // map ke backend,
+        turnstileToken: submittedToken,
       });
+
+      showToast('Account created. You can login with created login')
 
       // Redirect to login after success
       router.push("/auth/login");
@@ -99,6 +122,10 @@ export default function RegisterPage() {
           general: "Unexpected error",
         });
       }
+
+      // Reset the single-use token after a failed request
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
     } finally {
       setLoading(false);
     }
@@ -121,10 +148,12 @@ export default function RegisterPage() {
       <div className="relative bg-white w-[380px] rounded-xl shadow-lg p-6">
         {/* Header */}
         <div className="flex items-center justify-center gap-2 mb-4">
-          <div className="w-8 h-8 bg-green-400 rounded-md flex items-center justify-center text-white font-bold">
-            ⛁
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-700 text-xl font-bold text-white shadow-lg">
+            T
           </div>
-          <h1 className="text-lg font-semibold">TaskFlow</h1>
+          <span className="text-2xl font-bold tracking-tight">
+            TaskFlow
+          </span>
         </div>
 
         <p className="text-center text-sm text-gray-500 mb-6">
@@ -263,10 +292,40 @@ export default function RegisterPage() {
             )}
           </div>
 
+          {/* Turnstile */}
+          <div className="flex justify-center py-2">
+            <Turnstile
+              ref={turnstileRef}
+              siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+              options={{
+                appearance: "always",
+                execution: "render",
+                size: "normal",
+                theme: "light",
+                action: "register"
+              }}
+              onSuccess={(token) => {
+                setTurnstileToken(token);
+              }}
+              onExpire={() => {
+                setTurnstileToken(null);
+              }}
+              onError={() => {
+                setTurnstileToken(null);
+
+                setErrors((prev) => ({
+                  ...prev,
+                  general: "Security verification failed. Please try again.",
+                }));
+              }}
+            />
+          </div>
+
           {/* Button */}
           <button
+            type="button"
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={loading || !turnstileToken}
             className="w-full bg-green-500 text-white py-2 rounded-md text-sm
               hover:bg-green-600 active:scale-95 transition
               disabled:opacity-50 disabled:cursor-not-allowed"

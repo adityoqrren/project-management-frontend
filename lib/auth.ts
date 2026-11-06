@@ -2,10 +2,18 @@ import { apiFetch } from "./api";
 import { MeResponse } from "./responses";
 
 // LOGIN
-export async function login(email: string, password: string) {
+export async function login(
+  email: string,
+  password: string,
+  turnstileToken?: string
+) {
   return apiFetch("/api/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({
+      email,
+      password,
+      ...(turnstileToken && { turnstileToken }),
+    }),
     skipAuthRefresh: true,
   });
 }
@@ -16,6 +24,7 @@ export function register(data: {
   username: string;
   password: string;
   name: string;
+  turnstileToken: string;
 }) {
   return apiFetch("/api/auth/register", {
     method: "POST",
