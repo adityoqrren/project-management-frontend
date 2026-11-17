@@ -104,10 +104,21 @@ export default function ProjectTeamPage() {
     )
   }
 
-  const handleMemberStatusChanged = () => {
-    queryClient.invalidateQueries({
-      queryKey: ["projectMembers", projectId],
-    })
+  const handleMemberStatusChanged = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ["task"],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["projectTasks", projectId],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["archivedProjectTasks", projectId],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["myTasks"],
+      }),
+    ]);
   }
 
   return (

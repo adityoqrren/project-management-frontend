@@ -13,6 +13,7 @@ interface CommentItemProps {
   onDelete: (commentId: string) => void;
   isUpdating: boolean;
   isDeleting: boolean;
+  isReadOnly: boolean;
 }
 
 export default function CommentItem({
@@ -23,6 +24,7 @@ export default function CommentItem({
   onDelete,
   isUpdating,
   isDeleting,
+  isReadOnly,
 }: CommentItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(comment.content);
@@ -59,7 +61,7 @@ export default function CommentItem({
           </p>
         </div>
 
-        {(isOwner || canManageTask) && !isEditing && (
+        {(isOwner || canManageTask) && !isEditing && !isReadOnly && (
           <div className="flex shrink-0 items-center gap-1">
             {/** only owner comment can edit */}
             {isOwner && (
@@ -105,7 +107,7 @@ export default function CommentItem({
         )}
       </div>
 
-      {isEditing ? (
+      {isEditing && !isReadOnly ? (
         <div className="mt-3">
           <textarea
             value={content}

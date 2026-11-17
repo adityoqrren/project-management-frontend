@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Trash2, X } from "lucide-react";
+import { Archive, Trash2, X } from "lucide-react";
 
 import { ToastType, useToast } from "@/context/ToastContext";
 
 import {
+  archiveTask,
   assignTask,
   deleteTask,
+  unarchiveTask,
   updateTask,
   updateTaskProgress,
 } from "@/lib/task";
@@ -40,6 +42,7 @@ interface TaskDetailFormProps {
   members: Member[];
   canManageTask: boolean;
   canUpdateProgress: boolean;
+  onTaskArchivedOrDeleted: () => void;
 }
 
 export default function TaskDetailForm({
@@ -47,12 +50,29 @@ export default function TaskDetailForm({
   members,
   canManageTask,
   canUpdateProgress,
+  onTaskArchivedOrDeleted,
 }: TaskDetailFormProps) {
+  const isArchived = task?.archiveSource !== null &&
+    task?.archiveSource !== undefined;
+
+  const isReadOnly = isArchived
+
+  const taskArchiveStatus =
+    task?.archiveSource === "MANUAL"
+      ? "Archived"
+      : task?.archiveSource === "PROJECT"
+        ? "Archived by Project"
+        : "Active";
+
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] =
     useState(false);
+
+  const [confirmArchiveOpen, setConfirmArchiveOpen] = useState(false);
+
+  const [confirmUnarchiveOpen, setConfirmUnarchiveOpen] = useState(false);
 
   const [descriptionEditing, setDescriptionEditing] = useState(false);
 
@@ -135,26 +155,34 @@ export default function TaskDetailForm({
     mutationFn: () => deleteTask(task.id),
 
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["projectTasks", task.project.id],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: [
-          "deletedProjectTasks",
-          task.project.id,
-        ],
-      });
-
-      await queryClient.invalidateQueries({
-        queryKey: ["myTasks"],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["task", task.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["projectTasks", task.project.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["deletedProjectTasks", task.project.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["myTasks"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["archivedProjectTasks", task.project.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["projectStatistics", task.project.id]
+        })
+      ]);
 
       invalidateDashboard(queryClient);
 
       showToast("Task deleted successfully");
 
       setConfirmDeleteOpen(false);
+
+      onTaskArchivedOrDeleted();
     },
 
     onError: (error) => {
@@ -167,6 +195,72 @@ export default function TaskDetailForm({
     },
   });
 
+  const archiveMutation = useMutation({
+    mutationFn: () => archiveTask(task.id),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["task", task.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["projectTasks", task.project.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["archivedProjectTasks", task.project.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["myTasks"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["projectStatistics", task.project.id]
+        })
+      ]);
+
+      invalidateDashboard(queryClient);
+
+      showToast("Task archived successfully");
+      setConfirmArchiveOpen(false);
+      onTaskArchivedOrDeleted();
+    },
+    onError: (error) => {
+      console.error(error);
+      showToast("Failed to archive task", ToastType.error);
+    },
+  });
+
+  const unarchiveMutation = useMutation({
+    mutationFn: () => unarchiveTask(task.id),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["task", task.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["projectTasks", task.project.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["archivedProjectTasks", task.project.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["myTasks"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["projectStatistics", task.project.id]
+        })
+      ]);
+
+      invalidateDashboard(queryClient);
+
+      showToast("Task successfully restored to Active tasks list");
+      setConfirmArchiveOpen(false);
+      onTaskArchivedOrDeleted();
+    },
+    onError: (error) => {
+      console.error(error);
+      showToast("Failed to unarchive task", ToastType.error);
+    },
+  });
+
   const canEdit =
     canManageTask || canUpdateProgress;
 
@@ -175,6 +269,10 @@ export default function TaskDetailForm({
 
   const isSaving =
     updateMutation.isPending;
+
+  const isArchiving = archiveMutation.isPending;
+
+  const isUnarchiving = unarchiveMutation.isPending;
 
   const isDeleting =
     deleteMutation.isPending;
@@ -254,9 +352,22 @@ export default function TaskDetailForm({
               <h1 className="text-lg font-semibold">
                 {task.title}
               </h1>
+
+              <div className="shrink-0">
+                <span
+                  className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${taskArchiveStatus === "Active"
+                    ? "bg-green-100 text-green-700"
+                    : taskArchiveStatus === "Archived"
+                      ? "bg-purple-100 text-purple-700"
+                      : "bg-amber-100 text-amber-700"
+                    }`}
+                >
+                  {taskArchiveStatus}
+                </span>
+              </div>
             </div>
 
-            {canEdit && (
+            {(canEdit && !isReadOnly) && (
               <button
                 type="button"
                 onClick={handleSave}
@@ -302,7 +413,7 @@ export default function TaskDetailForm({
                       title: event.target.value,
                     }))
                   }
-                  disabled={!canManageTask}
+                  disabled={!canManageTask || isReadOnly}
                   className="
                   mt-1
                   w-full
@@ -349,17 +460,17 @@ export default function TaskDetailForm({
                 "
                 /> */}
 
-                {descriptionEditing ? (
+                {descriptionEditing && !isReadOnly ? (
                   <div className="space-y-2">
                     <RichTextEditor
                       content={form.description}
                       onChange={(value) => {
-                          setForm((prev) => ({
-                            ...prev,
-                            description: value,
-                          }))
-                          console.log(`value detail task form: ${value}`)
-                        }
+                        setForm((prev) => ({
+                          ...prev,
+                          description: value,
+                        }))
+                        console.log(`value detail task form: ${value}`)
+                      }
                       }
                     />
 
@@ -455,7 +566,7 @@ export default function TaskDetailForm({
                 </label>
 
                 <div className="mt-1">
-                  {canManageTask ? (
+                  {canManageTask && !isReadOnly ? (
                     <AssigneeSelector
                       users={members}
                       value={form.assignee}
@@ -485,6 +596,7 @@ export default function TaskDetailForm({
                   isActive={form.isActive}
                   canManageTask={canManageTask}
                   canEdit={canEdit}
+                  isReadOnly={isReadOnly}
                   onStartDateChange={handleStartDateChange}
                   onDueDateChange={handleDueDateChange}
                   onStatusChange={handleStatusChange}
@@ -497,7 +609,7 @@ export default function TaskDetailForm({
               <TaskAttachments
                 taskId={task.id}
                 canManageAttachment={
-                  canManageAttachment
+                  canManageAttachment && !isReadOnly
                 }
               />
 
@@ -506,6 +618,7 @@ export default function TaskDetailForm({
                 <TaskActivityTabs
                   taskId={task.id}
                   canManageTask={canManageTask}
+                  isReadOnly={isReadOnly}
                 />
               </div>
 
@@ -515,6 +628,7 @@ export default function TaskDetailForm({
                 <CommentsSection
                   taskId={task.id}
                   canManageTask={canManageTask}
+                  isReadOnly={isReadOnly}
                 />
               </div>
 
@@ -522,179 +636,6 @@ export default function TaskDetailForm({
 
             {/* Right column */}
             <div className="space-y-5">
-
-              {/* Dates */}
-              {/* <div>
-                <label className="text-sm text-gray-500">
-                  Dates
-                </label>
-
-                <div className="mt-1 space-y-2 rounded-md bg-green-100 p-3">
-
-                  <DateTimePicker
-                    label="Start date"
-                    value={form.startDate}
-                    onChange={(dateTime) =>
-                      setForm((previous) => ({
-                        ...previous,
-                        startDate: dateTime,
-                      }))
-                    }
-                    required
-                    readonly={!canManageTask}
-                  />
-
-                  <DateTimePicker
-                    label="Due date"
-                    value={form.dueDate}
-                    onChange={(dateTime) =>
-                      setForm((previous) => ({
-                        ...previous,
-                        dueDate: dateTime,
-                      }))
-                    }
-                    readonly={!canManageTask}
-                  />
-
-                </div>
-              </div> */}
-
-              {/* Status */}
-              {/* <div>
-                <label className="text-sm text-gray-500">
-                  Status
-                </label>
-
-                <select
-                  value={form.status}
-                  disabled={!canEdit}
-                  onChange={(event) =>
-                    setForm((previous) => ({
-                      ...previous,
-                      status:
-                        event.target.value as TaskStatus,
-                    }))
-                  }
-                  className="
-                  mt-1
-                  w-full
-                  rounded-md
-                  border
-                  px-3
-                  py-2
-                  disabled:bg-gray-100
-                "
-                >
-                  <option value="TODO">
-                    Todo
-                  </option>
-
-                  <option value="IN_PROGRESS">
-                    In Progress
-                  </option>
-
-                  <option value="DONE">
-                    Done
-                  </option>
-                </select>
-              </div> */}
-
-              {/* Priority */}
-              {/* <div>
-                <label className="text-sm text-gray-500">
-                  Priority
-                </label>
-
-                {canManageTask ? (
-                  <select
-                    value={form.priority}
-                    onChange={(event) =>
-                      setForm((previous) => ({
-                        ...previous,
-                        priority:
-                          event.target.value as Priority,
-                      }))
-                    }
-                    className="
-                    mt-1
-                    w-full
-                    rounded-md
-                    border
-                    px-3
-                    py-2
-                  "
-                  >
-                    <option value="LOW">
-                      Low
-                    </option>
-
-                    <option value="MEDIUM">
-                      Medium
-                    </option>
-
-                    <option value="HIGH">
-                      High
-                    </option>
-                  </select>
-                ) : (
-                  <div className="mt-1 rounded-md bg-yellow-200 px-3 py-2 text-sm">
-                    {form.priority}
-                  </div>
-                )}
-              </div> */}
-
-              {/* Active state */}
-              {/* {canManageTask && (
-                <div>
-                  <label className="text-sm text-gray-500">
-                    Active state
-                  </label>
-
-                  <div className="mt-1 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setForm((previous) => ({
-                          ...previous,
-                          isActive: true,
-                        }))
-                      }
-                      className={`
-                      rounded-md
-                      px-3
-                      py-1
-                      ${form.isActive
-                          ? "bg-gray-300"
-                          : "bg-gray-100"
-                        }
-                    `}
-                    >
-                      Active
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setForm((previous) => ({
-                          ...previous,
-                          isActive: false,
-                        }))
-                      }
-                      className={`
-                      rounded-md
-                      px-3
-                      py-1
-                      ${!form.isActive
-                          ? "bg-gray-300"
-                          : "bg-gray-100"
-                        }
-                    `}
-                    >
-                      Inactive
-                    </button>
-                  </div>
-                </div>
-              )} */}
 
               {/* Task Properties - mobile only */}
               <div className="hidden lg:block">
@@ -706,6 +647,7 @@ export default function TaskDetailForm({
                   isActive={form.isActive}
                   canManageTask={canManageTask}
                   canEdit={canEdit}
+                  isReadOnly={isReadOnly}
                   onStartDateChange={handleStartDateChange}
                   onDueDateChange={handleDueDateChange}
                   onStatusChange={handleStatusChange}
@@ -715,33 +657,86 @@ export default function TaskDetailForm({
               </div>
 
               {/* Danger zone */}
-              {canManageTask && (
+              {canManageTask && task.archiveSource !== "PROJECT" && (
                 <div className="pt-2">
                   <label className="text-sm text-gray-500">
                     Danger zone
                   </label>
 
+                  {/* Archive task */}
+                  {task.archiveSource === null && (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmArchiveOpen(true)}
+                      disabled={isArchiving || isUnarchiving || isDeleting}
+                      className="
+                          mt-1
+                          flex
+                          w-full
+                          items-center
+                          justify-center
+                          gap-2
+                          rounded-md
+                          bg-amber-100
+                          px-3
+                          py-2
+                          text-amber-700
+                          hover:bg-amber-200
+                          disabled:opacity-50
+                        "
+                    >
+                      <Archive className="size-4" />
+                      Archive task
+                    </button>
+                  )}
+
+                  {/* Unarchive task */}
+                  {task.archiveSource === "MANUAL" && (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmUnarchiveOpen(true)}
+                      disabled={isUnarchiving || isArchiving || isDeleting}
+                      className="
+                        mt-1
+                        flex
+                        w-full
+                        items-center
+                        justify-center
+                        gap-2
+                        rounded-md
+                        bg-green-100
+                        px-3
+                        py-2
+                        text-green-700
+                        hover:bg-green-200
+                        disabled:opacity-50
+                      "
+                    >
+                      <Archive className="size-4" />
+                      Unarchive task
+                    </button>
+                  )}
+
+                  {/* Delete task */}
                   <button
                     type="button"
-                    onClick={() =>
-                      setConfirmDeleteOpen(true)
-                    }
-                    disabled={isDeleting}
+                    onClick={() => setConfirmDeleteOpen(true)}
+                    disabled={isDeleting || isArchiving || isUnarchiving}
                     className="
-                    mt-1
-                    flex
-                    w-full
-                    items-center
-                    justify-center
-                    gap-2
-                    rounded-md
-                    bg-red-100
-                    px-3
-                    py-2
-                    text-red-600
-                    hover:bg-red-200
-                    disabled:opacity-50
-                  "
+                      mt-1
+                      flex
+                      w-full
+                      items-center
+                      justify-center
+                      gap-2
+                      rounded-md
+                      bg-red-100
+                      px-3
+                      py-2
+                      text-red-600
+                      hover:bg-red-200
+                      disabled:opacity-50
+                    "
                   >
                     <Trash2 className="size-4" />
                     Delete task
@@ -774,6 +769,15 @@ export default function TaskDetailForm({
       </div>
 
       <ConfirmDialog
+        open={confirmArchiveOpen}
+        title="Archive task"
+        description="Are you sure you want to archive this task? You can restore it later from the Archived tasks page."
+        onCancel={() => setConfirmArchiveOpen(false)}
+        onConfirm={() => archiveMutation.mutate()}
+        loading={isArchiving}
+      />
+
+      <ConfirmDialog
         open={confirmDeleteOpen}
         title="Delete task"
         description="Are you sure you want to delete this task?"
@@ -784,6 +788,15 @@ export default function TaskDetailForm({
           deleteMutation.mutate()
         }
         loading={isDeleting}
+      />
+
+      <ConfirmDialog
+        open={confirmUnarchiveOpen}
+        title="Unarchive task"
+        description="Are you sure you want to unarchive this task? It will be moved back to Active tasks."
+        onCancel={() => setConfirmUnarchiveOpen(false)}
+        onConfirm={() => unarchiveMutation.mutate()}
+        loading={isUnarchiving}
       />
     </>
   );

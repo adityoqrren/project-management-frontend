@@ -6,54 +6,68 @@ import { formatDateLocal } from "@/utils/formatter"
 import { RotateCcw, Trash2 } from "lucide-react"
 import ActionsMenu from "../common/ActionsMenu"
 
+
 interface TaskRowProps {
-  task: Task,
-  mode?: "active" | "deleted";
+  task: Task;
+  mode?: "active" | "archived" | "deleted";
 
   onOpenTask?: (task: Task) => void;
-
   onRestore?: (task: Task) => void;
-
+  onDelete?: (task: Task) => void;
   onPermanentDelete?: (task: Task) => void;
 }
 
-export default function TaskRow({ task, mode, onOpenTask, onRestore, onPermanentDelete }: TaskRowProps) {
+export default function TaskRow({
+  task,
+  mode = "active",
+  onOpenTask,
+  onRestore,
+  onDelete,
+  onPermanentDelete,
+}: TaskRowProps) {
+  const dateLabel =
+    mode === "archived" ? task.archivedAt : task.deletedAt;
+
   return (
     <tr className="border-b hover:bg-gray-50">
-
       <td className="p-4">
-        {mode === "active" ? (
+        {mode === "active" || mode === "archived" ? (
           <button
             onClick={() => onOpenTask?.(task)}
-            className="text-blue-600 hover:underline text-left"
+            className="text-left text-blue-600 hover:underline"
           >
             {task.title}
           </button>
         ) : (
-          <span>{task.title}</span>
+          <div className="space-y-1">
+            <span>{task.title}</span>
+            <div>
+              <span
+                className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${task.archiveSource === "MANUAL"
+                  ? "bg-purple-100 text-purple-700"
+                  : "bg-blue-100 text-blue-700"
+                  }`}
+              >
+                Originally{" "}
+                {task.archiveSource === "MANUAL" ? "Archived" : "Active"}
+              </span>
+            </div>
+          </div>
         )}
       </td>
 
-      <td className="p-4">
-        {task.project.name}
-      </td>
+      <td className="p-4">{task.project.name}</td>
 
       <td className="p-4">
-        {task.assignee != null ? task.assignee.name : 'unassigned'}
+        {task.assignee != null ? task.assignee.name : "unassigned"}
       </td>
 
       <td className="p-4 text-sm text-gray-600">
-        {task.startDate
-          ? formatDateLocal(task.startDate)
-          : "-"
-        }
+        {task.startDate ? formatDateLocal(task.startDate) : "-"}
       </td>
 
       <td className="p-4 text-sm text-gray-600">
-        {task.dueDate
-          ? formatDateLocal(task.dueDate)
-          : "-"
-        }
+        {task.dueDate ? formatDateLocal(task.dueDate) : "-"}
       </td>
 
       <td className="p-4">
@@ -67,13 +81,10 @@ export default function TaskRow({ task, mode, onOpenTask, onRestore, onPermanent
       ) : (
         <>
           <td className="p-4 text-sm text-gray-600">
-            {task.deletedAt
-              ? formatDateLocal(task.deletedAt)
-              : "-"}
+            {dateLabel ? formatDateLocal(dateLabel) : "-"}
           </td>
 
           <td className="p-4 text-right">
-
             <ActionsMenu
               actions={[
                 {
@@ -81,19 +92,28 @@ export default function TaskRow({ task, mode, onOpenTask, onRestore, onPermanent
                   icon: <RotateCcw className="size-4" />,
                   onClick: () => onRestore?.(task),
                 },
-                {
-                  label: "Delete permanently",
-                  icon: <Trash2 className="size-4" />,
-                  variant: "destructive",
-                  onClick: () => onPermanentDelete?.(task),
-                },
+                ...(mode === "archived"
+                  ? [
+                    {
+                      label: "Delete",
+                      icon: <Trash2 className="size-4" />,
+                      variant: "destructive" as const,
+                      onClick: () => onDelete?.(task),
+                    },
+                  ]
+                  : [
+                    {
+                      label: "Delete permanently",
+                      icon: <Trash2 className="size-4" />,
+                      variant: "destructive" as const,
+                      onClick: () => onPermanentDelete?.(task),
+                    },
+                  ]),
               ]}
             />
-
           </td>
         </>
       )}
-
     </tr>
-  )
+  );
 }

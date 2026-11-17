@@ -8,6 +8,7 @@ import TaskActivityHistory from "./TaskActivityHistory";
 interface TaskActivityTabsProps {
   taskId: string;
   canManageTask: boolean;
+  isReadOnly: boolean;
 }
 
 type ActivityTab = "comments" | "history";
@@ -15,6 +16,7 @@ type ActivityTab = "comments" | "history";
 export default function TaskActivityTabs({
   taskId,
   canManageTask,
+  isReadOnly,
 }: TaskActivityTabsProps) {
   const [activeTab, setActiveTab] =
     useState<ActivityTab>("comments");
@@ -62,6 +64,7 @@ export default function TaskActivityTabs({
           <CommentsSection
             taskId={taskId}
             canManageTask={canManageTask}
+            isReadOnly={isReadOnly}
           />
         )}
 

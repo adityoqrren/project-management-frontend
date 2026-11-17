@@ -167,6 +167,23 @@ export default function TaskDetailPage() {
     setTaskUpdated(false);
   };
 
+  const handleTaskArchivedOrDeleted = () => {
+    const query = searchParams.toString();
+
+    const isFromArchivedTasks =
+      searchParams.get("tab") === "archived";
+
+    const destinationPath = isFromArchivedTasks
+      ? `/projects/${projectId}/tasks/archived`
+      : `/projects/${projectId}/tasks`;
+
+    const destination = query
+      ? `${destinationPath}?${query}`
+      : destinationPath;
+
+    router.replace(destination);
+  };
+
   if (taskError || membersError || !task) {
     const message =
       isApiError(error)
@@ -277,6 +294,7 @@ export default function TaskDetailPage() {
         members={members}
         canManageTask={canManageTask}
         canUpdateProgress={canUpdateProgress}
+        onTaskArchivedOrDeleted={handleTaskArchivedOrDeleted}
       />
     </div>
   );

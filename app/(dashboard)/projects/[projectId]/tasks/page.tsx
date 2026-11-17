@@ -348,19 +348,19 @@ export default function TasksPage() {
           </h1>
           {canManageTask && (
             <Link
-              href={`/projects/${projectId}/tasks/deleted`}
+              href={`/projects/${projectId}/tasks/archived`}
               className="
       mt-2
       inline-flex
       items-center
       gap-1
       text-sm
-      text-red-600
-      hover:text-red-700
+      text-orange-600
+      hover:text-orange-700
       hover:underline
                 "
             >
-              View deleted tasks
+              Manage archived and deleted tasks
               <ArrowRight className="size-4" />
             </Link>
           )}

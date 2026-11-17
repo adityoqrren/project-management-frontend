@@ -1,4 +1,4 @@
-import { Member, Project, ProjectCreation, ProjectResponse, Role } from "@/types/project";
+import { Member, MemberTaskSummary, Project, ProjectCreation, ProjectResponse, Role } from "@/types/project";
 import { apiFetch } from "./api";
 import { mapProjectResponseToProject } from "./mappers/projectMapper";
 
@@ -110,7 +110,7 @@ export async function getProjectById(projectId: string) {
 
   return {
     status: result.status,
-    data: 
+    data:
       mapProjectResponseToProject(result.data)
     ,
   };
@@ -137,6 +137,22 @@ export async function addProjectMember(data: {
     body: JSON.stringify(data),
   });
 }
+
+
+// get member project tasks summary
+export async function getMemberTaskSummary(
+  projectId: string,
+  memberId: string
+) {
+  return apiFetch<
+    {
+      status: string;
+      data: MemberTaskSummary;
+    }>(
+      `/api/projects/${projectId}/members/${memberId}/task-summary`
+    );
+}
+
 
 export async function updateMemberActiveStatus(
   projectId: string,

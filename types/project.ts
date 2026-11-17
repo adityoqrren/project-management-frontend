@@ -52,6 +52,19 @@ export type Member = {
   isActive: boolean
 }
 
+export type MemberTaskSummary = {
+  memberId: string;
+  projectId: string;
+  unfinishedTasks: {
+    total: number;
+    todo: number;
+    inProgress: number;
+  };
+  completedTasks: {
+    total: number;
+  };
+};
+
 export type DashboardProject = {
   projectId: string;
   name: string;
