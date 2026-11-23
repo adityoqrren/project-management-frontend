@@ -24,7 +24,7 @@ export type ApiTask = {
 
   priority: Priority;
   startDate: string;
-  dueDate?: string;
+  dueDate?: string | null;
 
   projectId?: string;
 
@@ -41,9 +41,14 @@ export type ApiTask = {
     joinedAt: string;
   } | null;
 
+  archivedAt: string | null;
+  archiveSource: "MANUAL" | "PROJECT" | null;
+
+  deletedAt: string | null;
+  deleteSource: "MANUAL" | "PROJECT" | null;
+
   createdAt: string;
   updatedAt: string;
-  deletedAt: string | null;
 }
 
 export type Task = {
@@ -53,16 +58,22 @@ export type Task = {
   project: {
     id: string;
     name: string;
-  },
-  assignee?: Member | null; // ✅ update
+  };
+  assignee?: Member | null;
   status: TaskStatus;
   priority: Priority;
   startDate: string;
-  dueDate?: string;
+  dueDate?: string | null;
   isActive: boolean;
+
+  archivedAt: string | null;
+  archiveSource: "MANUAL" | "PROJECT" | null;
+
+  deletedAt: string | null;
+  deleteSource: "MANUAL" | "PROJECT" | null;
+
   createdAt: string;
   updatedAt: string;
-  deletedAt: string | null;
 };
 
 export type DashboardTask = {

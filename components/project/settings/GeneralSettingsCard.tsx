@@ -2,7 +2,7 @@ import { Project } from "@/types/project";
 
 interface GeneralSettingsCardProps {
   project: Project;
-  onEdit: () => void;
+  onEdit?: () => void;
 }
 
 export default function GeneralSettingsCard({
@@ -24,18 +24,22 @@ export default function GeneralSettingsCard({
           </p>
         </div>
 
-        <button
-          className="
+        {
+          onEdit && (
+            <button
+              className="
             px-4
             py-2
             rounded-md
             border
             hover:bg-gray-50
           "
-          onClick={onEdit}
-        >
-          Edit
-        </button>
+              onClick={onEdit}
+            >
+              Edit
+            </button>
+          )
+        }
 
       </div>
 

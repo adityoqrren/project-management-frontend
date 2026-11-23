@@ -11,6 +11,8 @@ export default function ProjectHeader({
 
   const date = formatDate(project.createdAt);
 
+  const projectStatus = project.deletedAt ? "Deleted" : project.archivedAt ? "Archived" : "Active"
+
   return (
     <div className="flex items-start justify-between gap-6 mb-6">
 
@@ -23,6 +25,19 @@ export default function ProjectHeader({
         <p className="mt-1 text-sm text-gray-500">
           Created {date}
         </p>
+
+        <div className="mb-2 shrink-0">
+          <span
+            className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${projectStatus === "Active"
+              ? "bg-green-100 text-green-700"
+              : projectStatus === "Archived"
+                ? "bg-purple-100 text-purple-700"
+                : "bg-amber-100 text-amber-700"
+              }`}
+          >
+            {projectStatus}
+          </span>
+        </div>
 
         {project.description ? (
           <div

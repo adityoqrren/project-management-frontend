@@ -34,6 +34,7 @@ import { formatDateTimeLocal } from "@/utils/formatter";
 import { useAuth } from "@/context/AuthContext";
 import TaskDetailForm from "../../../../../../components/task/TaskDetailForm";
 import { useWebSocket } from "@/providers/WebSocketProvider";
+import { useProject } from "@/context/ProjectContext";
 
 export default function TaskDetailPage() {
   const { user } = useAuth();
@@ -44,6 +45,12 @@ export default function TaskDetailPage() {
 
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const returnTo = searchParams.get("returnTo");
+
+  const { project } = useProject();
+
+  const isProjectArchived = Boolean(project.archivedAt);
 
   const [taskUpdated, setTaskUpdated] =
     useState(false);
@@ -147,8 +154,17 @@ export default function TaskDetailPage() {
 
 
   const handleBackToTasks = () => {
-    // back to previous page naturally (based on back stack in browser)
-    router.back();
+    // // back to previous page naturally (based on back stack in browser)
+    // router.back();
+
+    const fallbackUrl = `/projects/${projectId}/tasks`;
+
+    // Only allow internal application paths.
+    const isValidReturnTo =
+      returnTo?.startsWith("/") && !returnTo.startsWith("//");
+
+    router.replace(isValidReturnTo ? returnTo! : fallbackUrl);
+
   };
 
   if (taskLoading || membersLoading) {
@@ -165,6 +181,23 @@ export default function TaskDetailPage() {
     await refetchTask();
 
     setTaskUpdated(false);
+  };
+
+  const handleTaskArchivedOrDeleted = () => {
+    const query = searchParams.toString();
+
+    const isFromArchivedTasks =
+      searchParams.get("tab") === "archived";
+
+    const destinationPath = isFromArchivedTasks
+      ? `/projects/${projectId}/tasks/archived`
+      : `/projects/${projectId}/tasks`;
+
+    const destination = query
+      ? `${destinationPath}?${query}`
+      : destinationPath;
+
+    router.replace(destination);
   };
 
   if (taskError || membersError || !task) {
@@ -277,6 +310,8 @@ export default function TaskDetailPage() {
         members={members}
         canManageTask={canManageTask}
         canUpdateProgress={canUpdateProgress}
+        isProjectArchived={isProjectArchived}
+        onTaskArchivedOrDeleted={handleTaskArchivedOrDeleted}
       />
     </div>
   );

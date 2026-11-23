@@ -188,7 +188,7 @@ export default function ProjectsPage() {
             </p>
 
             <Link
-              href="/projects/deleted"
+              href="/projects/archived"
               className="
       mt-2
       inline-flex
@@ -200,7 +200,7 @@ export default function ProjectsPage() {
       hover:underline
     "
             >
-              View deleted projects
+              View archived and deleted projects
               <ArrowRight className="size-4" />
             </Link>
           </div>

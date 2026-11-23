@@ -11,6 +11,7 @@ interface TaskPropertiesProps {
   isActive: boolean;
   canManageTask: boolean;
   canEdit: boolean;
+  isReadOnly: boolean;
   onStartDateChange: (value: string) => void;
   onDueDateChange: (value: string) => void;
   onStatusChange: (value: TaskStatus) => void;
@@ -56,6 +57,7 @@ export default function TaskProperties({
   isActive,
   canManageTask,
   canEdit,
+  isReadOnly,
   onStartDateChange,
   onDueDateChange,
   onStatusChange,
@@ -76,14 +78,14 @@ export default function TaskProperties({
             value={startDate}
             onChange={onStartDateChange}
             required
-            readonly={!canManageTask}
+            readonly={isReadOnly || !canManageTask}
           />
 
           <DateTimePicker
             label="Due date"
             value={dueDate}
             onChange={onDueDateChange}
-            readonly={!canManageTask}
+            readonly={isReadOnly || !canManageTask}
           />
 
         </div>
@@ -103,7 +105,7 @@ export default function TaskProperties({
           onChange={(event) =>
             onStatusChange(event.target.value as TaskStatus)
           }
-          disabled={!canEdit}
+          disabled={isReadOnly || !canEdit}
           className="
             mt-1
             w-full
@@ -133,7 +135,7 @@ export default function TaskProperties({
           Priority
         </label>
 
-        {canManageTask ? (
+        {canManageTask && !isReadOnly ? (
           <select
             id="task-priority"
             value={priority}
@@ -161,42 +163,6 @@ export default function TaskProperties({
         ) : (
           <div className="mt-2 text-sm text-gray-700">
             {priority}
-          </div>
-        )}
-      </div>
-
-      <div>
-        <label className="text-sm text-gray-500">
-          Active state
-        </label>
-
-        {canManageTask ? (
-          <div className="mt-2 flex gap-2">
-            <button
-              type="button"
-              onClick={() => onActiveChange(true)}
-              className={`rounded-md px-3 py-2 text-sm ${isActive
-                ? "bg-gray-900 text-white"
-                : "border text-gray-600 hover:bg-gray-50"
-                }`}
-            >
-              Active
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onActiveChange(false)}
-              className={`rounded-md px-3 py-2 text-sm ${!isActive
-                ? "bg-gray-900 text-white"
-                : "border text-gray-600 hover:bg-gray-50"
-                }`}
-            >
-              Inactive
-            </button>
-          </div>
-        ) : (
-          <div className="mt-2 text-sm text-gray-700">
-            {isActive ? "Active" : "Inactive"}
           </div>
         )}
       </div>

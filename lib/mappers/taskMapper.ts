@@ -5,16 +5,16 @@ import { toLocalInput } from "@/utils/date";
 export function mapTaskFromApi(
   task: ApiTask
 ): Task {
-  
+
   const assignee: Member | null =
     task.assignee
       ? {
-          memberId: task.assignee.memberId,
-          userId: "",
-          name: task.assignee.name,
-          role: task.assignee.role,
-          isActive: task.assignee.isActive,
-        }
+        memberId: task.assignee.memberId,
+        userId: "",
+        name: task.assignee.name,
+        role: task.assignee.role,
+        isActive: task.assignee.isActive,
+      }
       : null;
 
   return {
@@ -23,8 +23,8 @@ export function mapTaskFromApi(
     description: task.description ?? "",
 
     project: {
-        id: task.project.id,
-        name: task.project.name
+      id: task.project.id,
+      name: task.project.name
     },
 
     assignee,
@@ -44,6 +44,9 @@ export function mapTaskFromApi(
     isActive: !task.completed,
     createdAt: task.createdAt, // still in ISO string
     updatedAt: task.updatedAt, // still in ISO string
-    deletedAt: task.deletedAt  // still in ISO string
+    archivedAt: task.archivedAt,
+    archiveSource: task.archiveSource,
+    deletedAt: task.deletedAt,     // still in ISO string
+    deleteSource: task.deleteSource,
   };
 }

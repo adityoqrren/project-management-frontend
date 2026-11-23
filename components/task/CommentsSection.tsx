@@ -16,6 +16,7 @@ import ConfirmDialog from "../ui/ConfirmDialog";
 interface CommentsSectionProps {
   taskId: string;
   canManageTask: boolean;
+  isReadOnly: boolean;
 }
 
 const COMMENT_LIMIT = 3;
@@ -23,6 +24,7 @@ const COMMENT_LIMIT = 3;
 export default function CommentsSection({
   taskId,
   canManageTask,
+  isReadOnly,
 }: CommentsSectionProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -168,6 +170,7 @@ export default function CommentsSection({
     data?.pages[0]?.pagination.total ?? 0;
 
   const handleSubmit = () => {
+    if (isReadOnly) return;
     const trimmedContent = content.trim();
 
     if (!trimmedContent || createMutation.isPending) {
@@ -181,6 +184,7 @@ export default function CommentsSection({
     commentId: string,
     newContent: string
   ) => {
+    if (isReadOnly) return;
     updateMutation.mutate({
       commentId,
       content: newContent,
@@ -188,11 +192,12 @@ export default function CommentsSection({
   };
 
   const handleDelete = (commentId: string) => {
+    if (isReadOnly) return;
     setDeleteCommentId(commentId);
   };
 
   const confirmDelete = () => {
-    if (!deleteCommentId) {
+    if (isReadOnly || !deleteCommentId) {
       return;
     }
 
@@ -216,16 +221,17 @@ export default function CommentsSection({
         </div>
 
         {/* Write comment */}
-        <div className="mt-6 mx-1">
-          <textarea
-            value={content}
-            onChange={(event) =>
-              setContent(event.target.value)
-            }
-            rows={3}
-            placeholder="Write a comment..."
-            disabled={createMutation.isPending}
-            className="
+        {!isReadOnly && (
+          <div className="mt-6 mx-1">
+            <textarea
+              value={content}
+              onChange={(event) =>
+                setContent(event.target.value)
+              }
+              rows={3}
+              placeholder="Write a comment..."
+              disabled={createMutation.isPending}
+              className="
               w-full
               resize-none
               rounded-md
@@ -239,17 +245,17 @@ export default function CommentsSection({
               focus:ring-blue-400
               disabled:bg-gray-100
             "
-          />
+            />
 
-          <div className="mt-2 flex justify-end">
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={
-                !content.trim() ||
-                createMutation.isPending
-              }
-              className="
+            <div className="mt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={
+                  !content.trim() ||
+                  createMutation.isPending
+                }
+                className="
                 rounded-md
                 bg-black
                 px-4
@@ -260,13 +266,14 @@ export default function CommentsSection({
                 disabled:cursor-not-allowed
                 disabled:opacity-50
               "
-            >
-              {createMutation.isPending
-                ? "Commenting..."
-                : "Comment"}
-            </button>
+              >
+                {createMutation.isPending
+                  ? "Commenting..."
+                  : "Comment"}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="mt-3 border-t">
           {/* Loading */}
@@ -321,6 +328,7 @@ export default function CommentsSection({
                       comment={comment}
                       currentUserId={user?.id}
                       canManageTask={canManageTask}
+                      isReadOnly={isReadOnly}
                       onUpdate={handleUpdate}
                       onDelete={handleDelete}
                       isUpdating={updateMutation.isPending}

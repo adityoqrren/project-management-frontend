@@ -1,14 +1,23 @@
-import { Member, Project, ProjectCreation, ProjectResponse, Role } from "@/types/project";
+import { Member, MemberTaskSummary, Project, ProjectCreation, ProjectResponse, Role } from "@/types/project";
 import { apiFetch } from "./api";
 import { mapProjectResponseToProject } from "./mappers/projectMapper";
 
 export type GetProjectsParams = {
-  status?: "active" | "deleted" | "all" //all | active | deleted -> default in server is active
+  status?: "active" | "archived" | "deleted" | "all" //all | active | deleted -> default in server is active
   search?: string;
   role?: string;
   sortBy?: string; // default in server is by createdAt
   order?: "asc" | "desc"; // default in server is desc
   limit?: number;
+};
+
+type ProjectArchiveResponse = {
+  status: string;
+  message: string;
+  data: {
+    projectId: string;
+    archivedAt: string | null;
+  };
 };
 
 export type ProjectStatistics = {
@@ -110,7 +119,7 @@ export async function getProjectById(projectId: string) {
 
   return {
     status: result.status,
-    data: 
+    data:
       mapProjectResponseToProject(result.data)
     ,
   };
@@ -137,6 +146,22 @@ export async function addProjectMember(data: {
     body: JSON.stringify(data),
   });
 }
+
+
+// get member project tasks summary
+export async function getMemberTaskSummary(
+  projectId: string,
+  memberId: string
+) {
+  return apiFetch<
+    {
+      status: string;
+      data: MemberTaskSummary;
+    }>(
+      `/api/projects/${projectId}/members/${memberId}/task-summary`
+    );
+}
+
 
 export async function updateMemberActiveStatus(
   projectId: string,
@@ -177,6 +202,26 @@ export async function updateProject(
     method: "PATCH",
     body: JSON.stringify(project),
   });
+}
+
+// Archive a project
+export async function archiveProject(projectId: string) {
+  return apiFetch<ProjectArchiveResponse>(
+    `/api/projects/${projectId}/archive`,
+    {
+      method: "PATCH",
+    }
+  );
+}
+
+// Unarchive a project
+export async function unarchiveProject(projectId: string) {
+  return apiFetch<ProjectArchiveResponse>(
+    `/api/projects/${projectId}/unarchive`,
+    {
+      method: "PATCH",
+    }
+  );
 }
 
 export async function softDeleteProject(

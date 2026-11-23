@@ -331,6 +331,66 @@ export async function getDeletedProjectTasks(
   };
 }
 
+// archive task
+export async function archiveTask(taskId: string) {
+  return apiFetch<{
+    status: string;
+    message: string;
+    data: {
+      taskId: string;
+      archivedAt: string;
+      archiveSource: "MANUAL";
+    };
+  }>(`/api/tasks/${taskId}/archive`, {
+    method: "PATCH",
+  });
+}
+
+// unarchive task
+export async function unarchiveTask(taskId: string) {
+  return apiFetch<{
+    status: string;
+    message: string;
+    data: {
+      taskId: string;
+      archivedAt: string | null;
+      archiveSource: "MANUAL" | "PROJECT" | null;
+      assigneeId: string | null;
+    };
+  }>(`/api/tasks/${taskId}/unarchive`, {
+    method: "PATCH",
+  });
+}
+
+// get archived project tasks
+export async function getArchivedProjectTasks(
+  projectId: string,
+  params?: GetProjectTasksParams
+) {
+  const searchParams = new URLSearchParams();
+
+  searchParams.set("status", "archived");
+  searchParams.set("include", "assignee");
+
+  appendQueryParam(searchParams, "search", params?.search);
+  appendQueryParam(searchParams, "assignee", params?.assignee);
+  appendQueryParam(searchParams, "taskStatus", params?.taskStatus);
+  appendQueryParam(searchParams, "priority", params?.priority);
+  appendQueryParam(searchParams, "sortBy", params?.sortBy);
+  appendQueryParam(searchParams, "order", params?.order);
+  appendQueryParam(searchParams, "page", params?.page);
+  appendQueryParam(searchParams, "limit", params?.limit);
+
+  const res = await getProjectTasksRaw(
+    `/api/projects/${projectId}/tasks?${searchParams.toString()}`
+  );
+
+  return {
+    ...res,
+    data: res.data.map(mapTaskFromApi),
+  };
+}
+
 //restore soft deleted task
 export async function restoreTask(
   taskId: string

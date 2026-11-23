@@ -14,10 +14,11 @@ export type ProjectResponse = {
   name: string;
   owner?: string; // only available in get project by id
   role?: string; // only available in get projects
-  description: string;
+  description: string | null;
   createdAt: string;
   updatedAt: string;
   lastActivityAt: string;
+  archivedAt?: string | null;
   deletedAt?: string | null;
 };
 
@@ -30,6 +31,7 @@ export type Project = {
   createdAt: string;
   updatedAt: string;
   lastActivityAt: string;
+  archivedAt?: string | null;
   deletedAt?: string | null;
 };
 
@@ -51,6 +53,19 @@ export type Member = {
   role: Role,
   isActive: boolean
 }
+
+export type MemberTaskSummary = {
+  memberId: string;
+  projectId: string;
+  unfinishedTasks: {
+    total: number;
+    todo: number;
+    inProgress: number;
+  };
+  completedTasks: {
+    total: number;
+  };
+};
 
 export type DashboardProject = {
   projectId: string;
