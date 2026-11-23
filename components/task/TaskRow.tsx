@@ -10,8 +10,10 @@ import ActionsMenu from "../common/ActionsMenu"
 interface TaskRowProps {
   task: Task;
   mode?: "active" | "archived" | "deleted";
+  isProjectArchived?: boolean;
+  canManageTask?: boolean;
 
-  onOpenTask?: (task: Task) => void;
+  getTaskHref?: (task: Task) => string;
   onRestore?: (task: Task) => void;
   onDelete?: (task: Task) => void;
   onPermanentDelete?: (task: Task) => void;
@@ -20,7 +22,9 @@ interface TaskRowProps {
 export default function TaskRow({
   task,
   mode = "active",
-  onOpenTask,
+  isProjectArchived,
+  canManageTask,
+  getTaskHref,
   onRestore,
   onDelete,
   onPermanentDelete,
@@ -32,12 +36,12 @@ export default function TaskRow({
     <tr className="border-b hover:bg-gray-50">
       <td className="p-4">
         {mode === "active" || mode === "archived" ? (
-          <button
-            onClick={() => onOpenTask?.(task)}
+          <Link
+            href={getTaskHref?.(task) ?? `/projects/${task.project.id}/tasks/${task.id}`}
             className="text-left text-blue-600 hover:underline"
           >
             {task.title}
-          </button>
+          </Link>
         ) : (
           <div className="space-y-1">
             <span>{task.title}</span>
@@ -85,32 +89,34 @@ export default function TaskRow({
           </td>
 
           <td className="p-4 text-right">
-            <ActionsMenu
-              actions={[
-                {
-                  label: "Restore",
-                  icon: <RotateCcw className="size-4" />,
-                  onClick: () => onRestore?.(task),
-                },
-                ...(mode === "archived"
-                  ? [
-                    {
-                      label: "Delete",
-                      icon: <Trash2 className="size-4" />,
-                      variant: "destructive" as const,
-                      onClick: () => onDelete?.(task),
-                    },
-                  ]
-                  : [
-                    {
-                      label: "Delete permanently",
-                      icon: <Trash2 className="size-4" />,
-                      variant: "destructive" as const,
-                      onClick: () => onPermanentDelete?.(task),
-                    },
-                  ]),
-              ]}
-            />
+            {!isProjectArchived && canManageTask && (
+              <ActionsMenu
+                actions={[
+                  {
+                    label: "Restore",
+                    icon: <RotateCcw className="size-4" />,
+                    onClick: () => onRestore?.(task),
+                  },
+                  ...(mode === "archived"
+                    ? [
+                      {
+                        label: "Delete",
+                        icon: <Trash2 className="size-4" />,
+                        variant: "destructive" as const,
+                        onClick: () => onDelete?.(task),
+                      },
+                    ]
+                    : [
+                      {
+                        label: "Delete permanently",
+                        icon: <Trash2 className="size-4" />,
+                        variant: "destructive" as const,
+                        onClick: () => onPermanentDelete?.(task),
+                      },
+                    ]),
+                ]}
+              />
+            )}
           </td>
         </>
       )}

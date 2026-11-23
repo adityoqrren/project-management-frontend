@@ -37,14 +37,17 @@ export default function ArchivedAndDeletedTasksPage() {
 
   const queryClient = useQueryClient();
 
-  const {
-    project,
-  } = useProject();
+  const { project, canManageProject } = useProject();
+
+  const isProjectArchived = Boolean(project.archivedAt);
 
   const { showToast } = useToast();
 
+  console.log(`project data ${JSON.stringify(project)}`)
+  console.log(`project role: ${project.role} || member isLeader: ${canManageProject}`);
+
   const [activeTab, setActiveTab] = useState<TaskView>(
-    searchParams.get("tab") === "deleted"
+    canManageProject && searchParams.get("tab") === "deleted"
       ? "deleted"
       : "archived"
   );
@@ -252,6 +255,7 @@ export default function ArchivedAndDeletedTasksPage() {
       activeTab === "archived"
         ? getArchivedProjectTasks(projectId, taskParams)
         : getDeletedProjectTasks(projectId, taskParams),
+    enabled: activeTab === "archived" || canManageProject,
     placeholderData: keepPreviousData,
   });
 
@@ -413,6 +417,7 @@ export default function ArchivedAndDeletedTasksPage() {
   });
 
   const handleTabChange = (tab: TaskView) => {
+    if (tab === "deleted" && !canManageProject) return;
     if (tab === activeTab) return;
 
     setActiveTab(tab);
@@ -421,17 +426,16 @@ export default function ArchivedAndDeletedTasksPage() {
     setFilterOpen(false);
   };
 
-  const handleOpenTask = (task: Task) => {
+  const getTaskHref = (task: Task) => {
     const query = searchParams.toString();
 
-    router.push(
-      query
-        ? `/projects/${projectId}/tasks/${task.id}?${query}`
-        : `/projects/${projectId}/tasks/${task.id}`
-    );
-  }
+    return query
+      ? `/projects/${projectId}/tasks/${task.id}?${query}`
+      : `/projects/${projectId}/tasks/${task.id}`;
+  };
 
   const handleRestore = (task: Task) => {
+    if (isProjectArchived) return;
     setRestoreTarget({
       task,
       mode: activeTab,
@@ -439,10 +443,12 @@ export default function ArchivedAndDeletedTasksPage() {
   };
 
   const handleDelete = (task: Task) => {
+    if (isProjectArchived) return;
     setSoftDeleteTarget(task);
   };
 
   const handlePermanentDelete = (task: Task) => {
+    if (isProjectArchived) return;
     setPermanentDeleteTarget(task);
   };
 
@@ -454,7 +460,7 @@ export default function ArchivedAndDeletedTasksPage() {
         <div>
 
           <h1 className="text-2xl font-semibold">
-            Archived & Deleted Tasks
+            {canManageProject ? "Archived & Deleted Tasks" : "Archived Tasks"}
           </h1>
 
           <Link
@@ -489,16 +495,20 @@ export default function ArchivedAndDeletedTasksPage() {
           Archived
         </button>
 
-        <button
-          type="button"
-          onClick={() => handleTabChange("deleted")}
-          className={`px-4 py-2 ${activeTab === "deleted"
-            ? "border-b-2 border-primary font-semibold"
-            : "text-muted-foreground"
-            }`}
-        >
-          Deleted
-        </button>
+        {
+          canManageProject && (
+            <button
+              type="button"
+              onClick={() => handleTabChange("deleted")}
+              className={`px-4 py-2 ${activeTab === "deleted"
+                ? "border-b-2 border-primary font-semibold"
+                : "text-muted-foreground"
+                }`}
+            >
+              Deleted
+            </button>
+          )
+        }
       </div>
 
 
@@ -722,7 +732,7 @@ export default function ArchivedAndDeletedTasksPage() {
             error={error as Error | null}
             onPageChange={setPage}
             onLimitChange={setLimit}
-            onOpenTask={handleOpenTask}
+            getTaskHref={getTaskHref}
             onRetry={() =>
               queryClient.invalidateQueries({
                 queryKey: [
@@ -736,6 +746,7 @@ export default function ArchivedAndDeletedTasksPage() {
             hasActiveFilters={hasActiveFilters}
             onClearFilters={handleClearFilters}
             mode={activeTab}
+            isProjectArchived={isProjectArchived}
             onRestore={handleRestore}
             onDelete={handleDelete}
             onPermanentDelete={handlePermanentDelete}

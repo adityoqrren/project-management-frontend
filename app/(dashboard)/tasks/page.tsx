@@ -194,15 +194,14 @@ export default function TasksPage() {
       }
       : createEmptyPagination(limit);
 
-  const handleOpenTask = (task: Task) => {
+  const getTaskHref = (task: Task) => {
     const query = searchParams.toString();
+    const returnTo = query ? `/tasks?${query}` : "/tasks";
 
-    router.push(
-      query
-        ? `/projects/${task.project.id}/tasks/${task.id}?${query}`
-        : `/projects/${task.project.id}/tasks/${task.id}`
-    );
-  }
+    const detailUrl = `/projects/${task.project.id}/tasks/${task.id}`;
+
+    return `${detailUrl}${query ? `?${query}&` : "?"}returnTo=${encodeURIComponent(returnTo)}`;
+  };
 
   const handleClearFilters = () => {
     setProjectId("");
@@ -500,7 +499,7 @@ export default function TasksPage() {
             fetching={tasksFetching}
             onPageChange={setPage}
             onLimitChange={setLimit}
-            onOpenTask={handleOpenTask}
+            getTaskHref={getTaskHref}
             onRetry={() => queryClient.invalidateQueries({
               queryKey: ["myTasks"],
             })}

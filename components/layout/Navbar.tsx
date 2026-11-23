@@ -3,7 +3,7 @@
 import { logout } from "@/lib/auth";
 import { isApiError } from "@/lib/errors";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import ErrorDialog from "../ui/ErrorDialog";
 import { useAuth } from "@/context/AuthContext";
@@ -23,6 +23,16 @@ export default function Navbar() {
   const { user, loading, setUser } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  const pathname = usePathname();
+
+  const isActive = (href: string) => {
+    if (href === "/") {
+      return pathname === "/";
+    }
+
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -66,13 +76,38 @@ export default function Navbar() {
     <>
       <nav className="flex h-14 items-center justify-between border-b bg-white px-6">
         {/* Logo */}
-        <div className="font-semibold text-lg">TaskFlow</div>
+        <Link href="/" className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-xl font-bold text-green-700 shadow-lg">
+            T
+          </div>
+          <span className="text-2xl font-bold tracking-tight">
+            TaskFlow
+          </span>
+        </Link>
 
         {/* Menu */}
         <div className="flex gap-6 text-sm">
-          <Link href="/">Home</Link>
-          <Link href="/projects">Projects</Link>
-          <Link href="/tasks">Tasks</Link>
+          {[
+            { label: "Home", href: "/" },
+            { label: "Projects", href: "/projects" },
+            { label: "Tasks", href: "/tasks" },
+          ].map((item) => {
+            const active = isActive(item.href);
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={`transition-colors ${active
+                    ? "font-semibold text-green-700"
+                    : "font-medium text-gray-500 hover:text-gray-900"
+                  }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Avatar + Dropdown */}

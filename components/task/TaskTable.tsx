@@ -16,12 +16,14 @@ interface TasksTableProps {
   hasActiveFilters: boolean;
 
   mode?: "active" | "archived" | "deleted";
+  isProjectArchived?: boolean;
+  canManageTask?: boolean;
 
   onPageChange: (page: number) => void;
   onLimitChange: (limit: number) => void;
   onClearFilters: () => void;
 
-  onOpenTask?: (task: Task) => void;
+  getTaskHref?: (task: Task) => string;
   onRestore?: (task: Task) => void;
   onDelete?: (task: Task) => void;
   onPermanentDelete?: (task: Task) => void;
@@ -36,12 +38,14 @@ export default function TasksTable({
   fetching,
   error,
   hasActiveFilters,
+  mode = "active",
+  isProjectArchived = false,
+  canManageTask,
   onPageChange,
   onLimitChange,
   onClearFilters,
   onRetry,
-  mode = "active",
-  onOpenTask,
+  getTaskHref,
   onRestore,
   onDelete,
   onPermanentDelete,
@@ -143,7 +147,9 @@ export default function TasksTable({
                 key={task.id}
                 task={task}
                 mode={mode}
-                onOpenTask={onOpenTask}
+                isProjectArchived={isProjectArchived}
+                canManageTask={canManageTask}
+                getTaskHref={getTaskHref}
                 onRestore={onRestore}
                 onDelete={onDelete}
                 onPermanentDelete={onPermanentDelete}

@@ -42,6 +42,7 @@ interface TaskDetailFormProps {
   members: Member[];
   canManageTask: boolean;
   canUpdateProgress: boolean;
+  isProjectArchived: boolean;
   onTaskArchivedOrDeleted: () => void;
 }
 
@@ -50,12 +51,14 @@ export default function TaskDetailForm({
   members,
   canManageTask,
   canUpdateProgress,
+  isProjectArchived,
   onTaskArchivedOrDeleted,
 }: TaskDetailFormProps) {
-  const isArchived = task?.archiveSource !== null &&
-    task?.archiveSource !== undefined;
+  const isTaskArchived =
+    task.archiveSource !== null &&
+    task.archiveSource !== undefined;
 
-  const isReadOnly = isArchived
+  const isReadOnly = isTaskArchived || isProjectArchived;
 
   const taskArchiveStatus =
     task?.archiveSource === "MANUAL"
@@ -286,6 +289,7 @@ export default function TaskDetailForm({
   );
 
   const handleSave = () => {
+    if (isProjectArchived) return;
     updateMutation.mutate();
   };
 
@@ -503,15 +507,19 @@ export default function TaskDetailForm({
                   </div>
                 ) : (
                   <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={handleDescriptionEdit}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        handleDescriptionEdit();
-                      }
-                    }}
+                    role={!isReadOnly ? "button" : undefined}
+                    tabIndex={!isReadOnly ? 0 : undefined}
+                    onClick={!isReadOnly ? handleDescriptionEdit : undefined}
+                    onKeyDown={
+                      !isReadOnly
+                        ? (event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            handleDescriptionEdit();
+                          }
+                        }
+                        : undefined
+                    }
                     className="
                       min-h-24
                       w-full
@@ -657,19 +665,21 @@ export default function TaskDetailForm({
               </div>
 
               {/* Danger zone */}
-              {canManageTask && task.archiveSource !== "PROJECT" && (
-                <div className="pt-2">
-                  <label className="text-sm text-gray-500">
-                    Danger zone
-                  </label>
+              {canManageTask &&
+                !isProjectArchived &&
+                task.archiveSource !== "PROJECT" && (
+                  <div className="pt-2">
+                    <label className="text-sm text-gray-500">
+                      Danger zone
+                    </label>
 
-                  {/* Archive task */}
-                  {task.archiveSource === null && (
-                    <button
-                      type="button"
-                      onClick={() => setConfirmArchiveOpen(true)}
-                      disabled={isArchiving || isUnarchiving || isDeleting}
-                      className="
+                    {/* Archive task */}
+                    {task.archiveSource === null && (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmArchiveOpen(true)}
+                        disabled={isArchiving || isUnarchiving || isDeleting}
+                        className="
                           mt-1
                           flex
                           w-full
@@ -684,19 +694,19 @@ export default function TaskDetailForm({
                           hover:bg-amber-200
                           disabled:opacity-50
                         "
-                    >
-                      <Archive className="size-4" />
-                      Archive task
-                    </button>
-                  )}
+                      >
+                        <Archive className="size-4" />
+                        Archive task
+                      </button>
+                    )}
 
-                  {/* Unarchive task */}
-                  {task.archiveSource === "MANUAL" && (
-                    <button
-                      type="button"
-                      onClick={() => setConfirmUnarchiveOpen(true)}
-                      disabled={isUnarchiving || isArchiving || isDeleting}
-                      className="
+                    {/* Unarchive task */}
+                    {task.archiveSource === "MANUAL" && (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmUnarchiveOpen(true)}
+                        disabled={isUnarchiving || isArchiving || isDeleting}
+                        className="
                         mt-1
                         flex
                         w-full
@@ -711,18 +721,18 @@ export default function TaskDetailForm({
                         hover:bg-green-200
                         disabled:opacity-50
                       "
-                    >
-                      <Archive className="size-4" />
-                      Unarchive task
-                    </button>
-                  )}
+                      >
+                        <Archive className="size-4" />
+                        Unarchive task
+                      </button>
+                    )}
 
-                  {/* Delete task */}
-                  <button
-                    type="button"
-                    onClick={() => setConfirmDeleteOpen(true)}
-                    disabled={isDeleting || isArchiving || isUnarchiving}
-                    className="
+                    {/* Delete task */}
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteOpen(true)}
+                      disabled={isDeleting || isArchiving || isUnarchiving}
+                      className="
                       mt-1
                       flex
                       w-full
@@ -737,12 +747,12 @@ export default function TaskDetailForm({
                       hover:bg-red-200
                       disabled:opacity-50
                     "
-                  >
-                    <Trash2 className="size-4" />
-                    Delete task
-                  </button>
-                </div>
-              )}
+                    >
+                      <Trash2 className="size-4" />
+                      Delete task
+                    </button>
+                  </div>
+                )}
 
               {/* Task Activity History (for desktop only) */}
 
@@ -773,7 +783,10 @@ export default function TaskDetailForm({
         title="Archive task"
         description="Are you sure you want to archive this task? You can restore it later from the Archived tasks page."
         onCancel={() => setConfirmArchiveOpen(false)}
-        onConfirm={() => archiveMutation.mutate()}
+        onConfirm={() => {
+          if (isProjectArchived) return;
+          archiveMutation.mutate();
+        }}
         loading={isArchiving}
       />
 
@@ -781,11 +794,11 @@ export default function TaskDetailForm({
         open={confirmDeleteOpen}
         title="Delete task"
         description="Are you sure you want to delete this task?"
-        onCancel={() =>
-          setConfirmDeleteOpen(false)
+        onCancel={() => setConfirmDeleteOpen(false)}
+        onConfirm={() => {
+          if (isProjectArchived) return;
+          deleteMutation.mutate();
         }
-        onConfirm={() =>
-          deleteMutation.mutate()
         }
         loading={isDeleting}
       />
@@ -795,7 +808,10 @@ export default function TaskDetailForm({
         title="Unarchive task"
         description="Are you sure you want to unarchive this task? It will be moved back to Active tasks."
         onCancel={() => setConfirmUnarchiveOpen(false)}
-        onConfirm={() => unarchiveMutation.mutate()}
+        onConfirm={() => {
+          if (isProjectArchived) return;
+          unarchiveMutation.mutate();
+        }}
         loading={isUnarchiving}
       />
     </>

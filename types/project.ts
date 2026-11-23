@@ -14,10 +14,11 @@ export type ProjectResponse = {
   name: string;
   owner?: string; // only available in get project by id
   role?: string; // only available in get projects
-  description: string;
+  description: string | null;
   createdAt: string;
   updatedAt: string;
   lastActivityAt: string;
+  archivedAt?: string | null;
   deletedAt?: string | null;
 };
 
@@ -30,6 +31,7 @@ export type Project = {
   createdAt: string;
   updatedAt: string;
   lastActivityAt: string;
+  archivedAt?: string | null;
   deletedAt?: string | null;
 };
 

@@ -289,15 +289,16 @@ export default function TasksPage() {
 
   const error = tasksError || membersError;
 
-  const handleOpenTask = (task: Task) => {
+  const getTaskHref = (task: Task) => {
     const query = searchParams.toString();
+    const returnTo = query
+      ? `/projects/${projectId}/tasks?${query}`
+      : `/projects/${projectId}/tasks`;
 
-    router.push(
-      query
-        ? `/projects/${projectId}/tasks/${task.id}?${query}`
-        : `/projects/${projectId}/tasks/${task.id}`
-    );
-  }
+    const detailUrl = `/projects/${projectId}/tasks/${task.id}`;
+
+    return `${detailUrl}${query ? `?${query}&` : "?"}returnTo=${encodeURIComponent(returnTo)}`;
+  };
 
   //Filter Handlers
   const handleAssigneeChange = (value: string) => {
@@ -346,10 +347,9 @@ export default function TasksPage() {
           <h1 className="text-2xl font-semibold">
             Tasks
           </h1>
-          {canManageTask && (
-            <Link
-              href={`/projects/${projectId}/tasks/archived`}
-              className="
+          <Link
+            href={`/projects/${projectId}/tasks/archived`}
+            className="
       mt-2
       inline-flex
       items-center
@@ -359,11 +359,10 @@ export default function TasksPage() {
       hover:text-orange-700
       hover:underline
                 "
-            >
-              Manage archived and deleted tasks
-              <ArrowRight className="size-4" />
-            </Link>
-          )}
+          >
+            {canManageTask ? "Manage archived and deleted tasks" : "See archived tasks"}
+            <ArrowRight className="size-4" />
+          </Link>
         </div>
         {canManageTask && (
           <button onClick={() => setOpenAddTaskDialog(true)} className="px-4 py-2 bg-black text-white rounded-md">
@@ -519,9 +518,10 @@ export default function TasksPage() {
             loading={loading}
             fetching={tasksFetching}
             error={error as Error | null}
+            canManageTask={canManageTask}
             onPageChange={setPage}
             onLimitChange={setLimit}
-            onOpenTask={handleOpenTask}
+            getTaskHref={getTaskHref}
             onRetry={() => queryClient.invalidateQueries({
               queryKey: ["projectTasks", projectId],
             })}
