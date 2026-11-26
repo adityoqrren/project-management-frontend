@@ -207,6 +207,18 @@ export function WebSocketProvider({
             });
         }
 
+        if (data.type === "project.member.deactivated" || data.type === "project.member.activated"  && data.entityType === "project") {
+            queryClient.invalidateQueries({
+                queryKey: ["project", data.entityId],
+                refetchType: 'none',
+            });
+            
+            queryClient.invalidateQueries({
+                queryKey: ["projectTasks", data.entityId,],
+                refetchType: 'none',
+            });
+        }
+
         notifyNotificationListeners(data);
     };
 

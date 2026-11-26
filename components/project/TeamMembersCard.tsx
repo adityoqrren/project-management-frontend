@@ -109,16 +109,30 @@ export default function TeamMembersCard({
 
               </div>
 
-              <span
-                className={`text-xs px-3 py-1 rounded-full font-medium
+              <div>
+                <span
+                  className={`text-xs px-3 py-1 rounded-full font-medium
     ${member.role === "LEADER"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-gray-100 text-gray-600"
-                  }
+                      ? "bg-green-100 text-green-700"
+                      : "bg-gray-100 text-gray-600"
+                    }
   `}
-              >
-                {member.role === "LEADER" ? "Leader" : "Member"}
-              </span>
+                >
+                  {member.role === "LEADER" ? "Leader" : "Member"}
+                </span>
+                {!member.isActive && (
+                  <span
+                    className="
+                      px-3 py-1 rounded-full
+                      text-xs font-medium
+                      bg-red-100 text-red-700
+                    "
+                  >
+                    INACTIVE
+                  </span>
+                )}
+              </div>
+
             </div>
           );
         }
