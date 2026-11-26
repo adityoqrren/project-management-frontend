@@ -428,11 +428,22 @@ export default function ArchivedAndDeletedTasksPage() {
 
   const getTaskHref = (task: Task) => {
     const query = searchParams.toString();
+    const returnTo = query
+      ? `/projects/${projectId}/tasks/archived?${query}`
+      : `/projects/${projectId}/tasks/archived`;
 
-    return query
-      ? `/projects/${projectId}/tasks/${task.id}?${query}`
-      : `/projects/${projectId}/tasks/${task.id}`;
+    const detailUrl = `/projects/${projectId}/tasks/${task.id}`;
+
+    return `${detailUrl}${query ? `?${query}&` : "?"}returnTo=${encodeURIComponent(returnTo)}`;
   };
+
+  // const getTaskHref = (task: Task) => {
+  //   const query = searchParams.toString();
+
+  //   return query
+  //     ? `/projects/${projectId}/tasks/${task.id}?${query}`
+  //     : `/projects/${projectId}/tasks/${task.id}`;
+  // };
 
   const handleRestore = (task: Task) => {
     if (isProjectArchived) return;
@@ -747,6 +758,7 @@ export default function ArchivedAndDeletedTasksPage() {
             onClearFilters={handleClearFilters}
             mode={activeTab}
             isProjectArchived={isProjectArchived}
+            canManageTask={canManageProject}
             onRestore={handleRestore}
             onDelete={handleDelete}
             onPermanentDelete={handlePermanentDelete}

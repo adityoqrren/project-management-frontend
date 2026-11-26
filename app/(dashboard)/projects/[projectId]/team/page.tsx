@@ -118,6 +118,9 @@ export default function ProjectTeamPage() {
       queryClient.invalidateQueries({
         queryKey: ["myTasks"],
       }),
+      queryClient.invalidateQueries({
+        queryKey: ["projectMembers", projectId]
+      })
     ]);
   }
 

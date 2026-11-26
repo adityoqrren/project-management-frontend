@@ -12,6 +12,12 @@ interface NotificationItemProps {
     onNavigate?: () => void
 }
 
+const NON_NAVIGABLE_NOTIFICATION_TYPES = [
+    "task.deleted",
+    "task.unassigned",
+    "project.member.deactivated",
+];
+
 export default function NotificationItem({
     notification,
     onNavigate
@@ -27,85 +33,77 @@ export default function NotificationItem({
     } = getNotificationTypeMeta(notification.type);
 
     const handleClick = async () => {
-
         try {
-            const href =
-                getNotificationHref(notification);
+            // Mark notification as read if needed.
+            if (!notification.isRead) {
+                await markNotificationAsRead(notification.id);
 
-            if (!href) {
+                // Optimistic update for unread count.
+                queryClient.setQueryData(
+                    ["notificationUnreadCount"],
+                    (old: UnreadCountResponse) => {
+                        if (!old) return old;
+
+                        return {
+                            ...old,
+                            data: {
+                                count: Math.max(0, old.data.count - 1),
+                            },
+                        };
+                    }
+                );
+
+                queryClient.invalidateQueries({
+                    queryKey: ["notifications"],
+                });
+
+                queryClient.invalidateQueries({
+                    queryKey: ["notificationUnreadCount"],
+                });
+            }
+
+            if (notification.entityType && notification.entityId) {
+                const queryEntityKey = [
+                    notification.entityType === "task" ? "task" : "project",
+                    notification.entityId,
+                ];
+
+                const queryDashboardKey = [
+                    notification.entityType === "task"
+                        ? "dashboardTasks"
+                        : "dashboardProjects",
+                ];
+
+                await Promise.all([
+                    queryClient.invalidateQueries({
+                        queryKey: queryEntityKey,
+                    }),
+                    queryClient.invalidateQueries({
+                        queryKey: queryDashboardKey,
+                    }),
+                ]);
+            }
+
+            onNavigate?.();
+
+            // Stop here for notifications that should not navigate.
+            if (
+                NON_NAVIGABLE_NOTIFICATION_TYPES.includes(
+                    notification.type
+                )
+            ) {
                 return;
             }
 
-            try {
-                if (!notification.isRead) {
+            const href = getNotificationHref(notification);
 
-                    await markNotificationAsRead(
-                        notification.id
-                    );
+            if (!href) return;
 
-                    //optimistic update for unread count
-                    queryClient.setQueryData(
-                        ["notificationUnreadCount"],
-                        (old: UnreadCountResponse) => {
-
-                            if (!old) return old;
-
-                            return {
-                                ...old,
-                                data: {
-                                    count: Math.max(
-                                        0,
-                                        old.data.count - 1
-                                    ),
-                                },
-                            };
-
-                        }
-                    );
-
-                    queryClient.invalidateQueries({
-                        queryKey: ["notifications"],
-                    });
-
-                    queryClient.invalidateQueries({
-                        queryKey: ["notificationUnreadCount"],
-                    });
-
-                }
-
-                if (
-                    notification.entityType &&
-                    notification.entityId
-                ) {
-                    const queryEntityKey = [notification.entityType == "task" ? "task" : "project", notification.entityId];
-                    const queryDashboardKey = [notification.entityType == "task" ? "dashboardTasks" : "dashboardProjects",];
-
-                    await Promise.all([
-                        queryClient.invalidateQueries({
-                            queryKey: queryEntityKey
-                        }),
-                        queryClient.invalidateQueries({
-                            queryKey: queryDashboardKey
-                        }),
-                    ])
-
-                }
-
-                onNavigate?.()
-                router.push(href);
-            } catch (error) {
-                console.error(error);
-            }
-
-        }
-        catch (error) {
-
+            router.push(href);
+        } catch (error) {
             console.error(error);
-
         }
-
     };
-
 
     return (
         <button
